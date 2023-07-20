@@ -46,6 +46,8 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	GetReceivers(params *GetReceiversParams, opts ...ClientOption) (*GetReceiversOK, error)
 
+	PostTestReceivers(params *PostTestReceiversParams, opts ...ClientOption) (*PostTestReceiversOK, error)
+
 	SetTransport(transport runtime.ClientTransport)
 }
 
@@ -84,6 +86,44 @@ func (a *Client) GetReceivers(params *GetReceiversParams, opts ...ClientOption) 
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for getReceivers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+PostTestReceivers Test all receivers (name of notification integrations)
+*/
+func (a *Client) PostTestReceivers(params *PostTestReceiversParams, opts ...ClientOption) (*PostTestReceiversOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostTestReceiversParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "postTestReceivers",
+		Method:             "POST",
+		PathPattern:        "/receivers/test",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostTestReceiversReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostTestReceiversOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postTestReceivers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

@@ -42,6 +42,26 @@ paths:
             type: array
             items:
               $ref: '#/definitions/receiver'
+  /receivers/test:
+    post:
+      tags:
+        - receiver
+      operationId: postTestReceivers
+      description: Test all receivers (name of notification integrations)
+      parameters:
+        - in: body
+          name: receiver
+          description: The receivers to test
+          required: true
+          schema:
+            $ref: '#/definitions/receiver'
+      responses:
+        '200':
+          description: Successfully tested all receivers
+        '500':
+          $ref: '#/responses/InternalServerError'
+        '400':
+          $ref: '#/responses/BadRequest'
   /silences:
     get:
       tags:

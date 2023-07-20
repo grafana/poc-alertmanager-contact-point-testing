@@ -89,6 +89,9 @@ func NewAlertmanagerAPI(spec *loads.Document) *AlertmanagerAPI {
 		SilencePostSilencesHandler: silence.PostSilencesHandlerFunc(func(params silence.PostSilencesParams) middleware.Responder {
 			return middleware.NotImplemented("operation silence.PostSilences has not yet been implemented")
 		}),
+		ReceiverPostTestReceiversHandler: receiver.PostTestReceiversHandlerFunc(func(params receiver.PostTestReceiversParams) middleware.Responder {
+			return middleware.NotImplemented("operation receiver.PostTestReceivers has not yet been implemented")
+		}),
 	}
 }
 
@@ -143,6 +146,8 @@ type AlertmanagerAPI struct {
 	AlertPostAlertsHandler alert.PostAlertsHandler
 	// SilencePostSilencesHandler sets the operation handler for the post silences operation
 	SilencePostSilencesHandler silence.PostSilencesHandler
+	// ReceiverPostTestReceiversHandler sets the operation handler for the post test receivers operation
+	ReceiverPostTestReceiversHandler receiver.PostTestReceiversHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -246,6 +251,9 @@ func (o *AlertmanagerAPI) Validate() error {
 	}
 	if o.SilencePostSilencesHandler == nil {
 		unregistered = append(unregistered, "silence.PostSilencesHandler")
+	}
+	if o.ReceiverPostTestReceiversHandler == nil {
+		unregistered = append(unregistered, "receiver.PostTestReceiversHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -371,6 +379,10 @@ func (o *AlertmanagerAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/silences"] = silence.NewPostSilences(o.context, o.SilencePostSilencesHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/receivers/test"] = receiver.NewPostTestReceivers(o.context, o.ReceiverPostTestReceiversHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP

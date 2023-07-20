@@ -101,6 +101,11 @@ func configureAPI(api *operations.AlertmanagerAPI) http.Handler {
 			return middleware.NotImplemented("operation silence.PostSilences has not yet been implemented")
 		})
 	}
+	if api.ReceiverPostTestReceiversHandler == nil {
+		api.ReceiverPostTestReceiversHandler = receiver.PostTestReceiversHandlerFunc(func(params receiver.PostTestReceiversParams) middleware.Responder {
+			return middleware.NotImplemented("operation receiver.PostTestReceivers has not yet been implemented")
+		})
+	}
 
 	api.PreServerShutdown = func() {}
 

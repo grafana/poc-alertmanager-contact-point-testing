@@ -230,6 +230,37 @@ func init() {
         }
       }
     },
+    "/receivers/test": {
+      "post": {
+        "description": "Test all receivers (name of notification integrations)",
+        "tags": [
+          "receiver"
+        ],
+        "operationId": "postTestReceivers",
+        "parameters": [
+          {
+            "description": "The receivers to test",
+            "name": "receiver",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/receiver"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully tested all receivers"
+          },
+          "400": {
+            "$ref": "#/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/responses/InternalServerError"
+          }
+        }
+      }
+    },
     "/silence/{silenceID}": {
       "get": {
         "description": "Get a silence by its ID",
@@ -1030,6 +1061,43 @@ func init() {
               "items": {
                 "$ref": "#/definitions/receiver"
               }
+            }
+          }
+        }
+      }
+    },
+    "/receivers/test": {
+      "post": {
+        "description": "Test all receivers (name of notification integrations)",
+        "tags": [
+          "receiver"
+        ],
+        "operationId": "postTestReceivers",
+        "parameters": [
+          {
+            "description": "The receivers to test",
+            "name": "receiver",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/receiver"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully tested all receivers"
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "type": "string"
             }
           }
         }
