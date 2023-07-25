@@ -93,6 +93,49 @@ func (o *PostTestReceiversBadRequest) WriteResponse(rw http.ResponseWriter, prod
 	}
 }
 
+// PostTestReceiversRequestTimeoutCode is the HTTP code returned for type PostTestReceiversRequestTimeout
+const PostTestReceiversRequestTimeoutCode int = 408
+
+/*
+PostTestReceiversRequestTimeout Request time out
+
+swagger:response postTestReceiversRequestTimeout
+*/
+type PostTestReceiversRequestTimeout struct {
+
+	/*
+	  In: Body
+	*/
+	Payload string `json:"body,omitempty"`
+}
+
+// NewPostTestReceiversRequestTimeout creates PostTestReceiversRequestTimeout with default headers values
+func NewPostTestReceiversRequestTimeout() *PostTestReceiversRequestTimeout {
+
+	return &PostTestReceiversRequestTimeout{}
+}
+
+// WithPayload adds the payload to the post test receivers request timeout response
+func (o *PostTestReceiversRequestTimeout) WithPayload(payload string) *PostTestReceiversRequestTimeout {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the post test receivers request timeout response
+func (o *PostTestReceiversRequestTimeout) SetPayload(payload string) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *PostTestReceiversRequestTimeout) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(408)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}
+
 // PostTestReceiversInternalServerErrorCode is the HTTP code returned for type PostTestReceiversInternalServerError
 const PostTestReceiversInternalServerErrorCode int = 500
 

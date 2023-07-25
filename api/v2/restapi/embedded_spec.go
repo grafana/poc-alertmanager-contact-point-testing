@@ -255,6 +255,9 @@ func init() {
           "400": {
             "$ref": "#/responses/BadRequest"
           },
+          "408": {
+            "$ref": "#/responses/RequestTimeOut"
+          },
           "500": {
             "$ref": "#/responses/InternalServerError"
           }
@@ -828,6 +831,12 @@ func init() {
       "schema": {
         "type": "string"
       }
+    },
+    "RequestTimeOut": {
+      "description": "Request time out",
+      "schema": {
+        "type": "string"
+      }
     }
   },
   "tags": [
@@ -1090,6 +1099,12 @@ func init() {
           },
           "400": {
             "description": "Bad request",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "408": {
+            "description": "Request time out",
             "schema": {
               "type": "string"
             }
@@ -1679,6 +1694,12 @@ func init() {
     },
     "InternalServerError": {
       "description": "Internal server error",
+      "schema": {
+        "type": "string"
+      }
+    },
+    "RequestTimeOut": {
+      "description": "Request time out",
       "schema": {
         "type": "string"
       }

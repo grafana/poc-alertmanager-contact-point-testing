@@ -47,6 +47,12 @@ func (o *PostTestReceiversReader) ReadResponse(response runtime.ClientResponse, 
 			return nil, err
 		}
 		return nil, result
+	case 408:
+		result := NewPostTestReceiversRequestTimeout()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewPostTestReceiversInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -161,6 +167,67 @@ func (o *PostTestReceiversBadRequest) GetPayload() string {
 }
 
 func (o *PostTestReceiversBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostTestReceiversRequestTimeout creates a PostTestReceiversRequestTimeout with default headers values
+func NewPostTestReceiversRequestTimeout() *PostTestReceiversRequestTimeout {
+	return &PostTestReceiversRequestTimeout{}
+}
+
+/*
+PostTestReceiversRequestTimeout describes a response with status code 408, with default header values.
+
+Request time out
+*/
+type PostTestReceiversRequestTimeout struct {
+	Payload string
+}
+
+// IsSuccess returns true when this post test receivers request timeout response has a 2xx status code
+func (o *PostTestReceiversRequestTimeout) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this post test receivers request timeout response has a 3xx status code
+func (o *PostTestReceiversRequestTimeout) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this post test receivers request timeout response has a 4xx status code
+func (o *PostTestReceiversRequestTimeout) IsClientError() bool {
+	return true
+}
+
+// IsServerError returns true when this post test receivers request timeout response has a 5xx status code
+func (o *PostTestReceiversRequestTimeout) IsServerError() bool {
+	return false
+}
+
+// IsCode returns true when this post test receivers request timeout response a status code equal to that given
+func (o *PostTestReceiversRequestTimeout) IsCode(code int) bool {
+	return code == 408
+}
+
+func (o *PostTestReceiversRequestTimeout) Error() string {
+	return fmt.Sprintf("[POST /receivers/test][%d] postTestReceiversRequestTimeout  %+v", 408, o.Payload)
+}
+
+func (o *PostTestReceiversRequestTimeout) String() string {
+	return fmt.Sprintf("[POST /receivers/test][%d] postTestReceiversRequestTimeout  %+v", 408, o.Payload)
+}
+
+func (o *PostTestReceiversRequestTimeout) GetPayload() string {
+	return o.Payload
+}
+
+func (o *PostTestReceiversRequestTimeout) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	// response payload
 	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {

@@ -62,6 +62,8 @@ paths:
           $ref: '#/responses/InternalServerError'
         '400':
           $ref: '#/responses/BadRequest'
+        '408':
+          $ref: '#/responses/RequestTimeOut'
   /silences:
     get:
       tags:
@@ -271,6 +273,10 @@ responses:
       type: string
   InternalServerError:
     description: Internal server error
+    schema:
+      type: string
+  RequestTimeOut:
+    description: Request time out
     schema:
       type: string
 
