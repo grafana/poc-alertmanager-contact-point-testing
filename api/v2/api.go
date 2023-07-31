@@ -31,6 +31,7 @@ import (
 	prometheus_model "github.com/prometheus/common/model"
 	"github.com/prometheus/common/version"
 	"github.com/rs/cors"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/prometheus/alertmanager/api/metrics"
 	open_api_models "github.com/prometheus/alertmanager/api/v2/models"
@@ -49,6 +50,8 @@ import (
 	"github.com/prometheus/alertmanager/silence"
 	"github.com/prometheus/alertmanager/silence/silencepb"
 	"github.com/prometheus/alertmanager/types"
+
+	"github.com/prometheus/alertmanager/notify"
 )
 
 // API represents an Alertmanager API v2
@@ -56,6 +59,7 @@ type API struct {
 	peer           cluster.ClusterPeer
 	silences       *silence.Silences
 	alerts         provider.Alerts
+	receivers      config.Receiver
 	alertGroups    groupsFn
 	getAlertStatus getAlertStatusFn
 	uptime         time.Time
@@ -96,6 +100,7 @@ func NewAPI(
 		alertGroups:    gf,
 		peer:           peer,
 		silences:       silences,
+		receivers:      receivers,
 		logger:         l,
 		m:              metrics.NewAlerts("v2", r),
 		uptime:         time.Now(),
@@ -124,6 +129,8 @@ func NewAPI(
 	openAPI.AlertgroupGetAlertGroupsHandler = alertgroup_ops.GetAlertGroupsHandlerFunc(api.getAlertGroupsHandler)
 	openAPI.GeneralGetStatusHandler = general_ops.GetStatusHandlerFunc(api.getStatusHandler)
 	openAPI.ReceiverGetReceiversHandler = receiver_ops.GetReceiversHandlerFunc(api.getReceiversHandler)
+	openAPI.ReceiverPostTestReceiversHandler = receiver_ops.PostTestReceiversHandlerFunc(api.postReceiversHandler)
+	// openAPI.ReceiverPostTestReceiversHandler = receiver_ops.PostTestReceiversHandlerFunc(api.postTestReceiversHandler)
 	openAPI.SilenceDeleteSilenceHandler = silence_ops.DeleteSilenceHandlerFunc(api.deleteSilenceHandler)
 	openAPI.SilenceGetSilenceHandler = silence_ops.GetSilenceHandlerFunc(api.getSilenceHandler)
 	openAPI.SilenceGetSilencesHandler = silence_ops.GetSilencesHandlerFunc(api.getSilencesHandler)
@@ -227,6 +234,147 @@ func (api *API) getReceiversHandler(params receiver_ops.GetReceiversParams) midd
 		receivers = append(receivers, &open_api_models.Receiver{Name: &api.alertmanagerConfig.Receivers[i].Name})
 	}
 
+	return receiver_ops.NewGetReceiversOK().WithPayload(receivers)
+}
+
+func (api *API) postTestReceiversHandler(params receiver_ops.PostTestReceiversParams) middleware.Responder {
+
+	const (
+		maxTestReceiversWorkers = 10
+	)
+
+	// var (
+	// 	ErrNoReceivers = errors.New("no receivers with configuration set")
+	// )
+
+	logger := api.requestLogger(params.HTTPRequest)
+
+	// testableReceivers, err :=
+	now := time.Now()
+
+	now.Local().Add(200)
+	logger.Log()
+
+	api.mtx.RLock()
+	defer api.mtx.RUnlock()
+
+	// job contains all metadata required to test a receiver
+	type job struct {
+		Receiver    *config.Receiver
+		Integration *notify.Integration
+	}
+
+	newTestReceiversResult := func(alert types.Alert, results []result, notifiedAt time.Time) *TestReceiversResult {
+		m := make(map[string]TestReceiverResult)
+		for _, receiver := range c.Receivers {
+			// set up the result for this receiver
+			m[receiver.Name] = TestReceiverResult{
+				Name:          receiver.Name,
+				ConfigResults: []TestReceiverConfigResult{},
+			}
+		}
+		for _, result := range results {
+			tmp := m[result.Receiver.Name]
+			status := "ok"
+			if result.Error != nil {
+				status = "failed"
+			}
+			tmp.ConfigResults = append(tmp.ConfigResults, TestReceiverConfigResult{
+				Name:   result.Integration.Name(),
+				Status: status,
+				Error:  result.Error,
+			})
+			m[result.Receiver.Name] = tmp
+		}
+		v := new(TestReceiversResult)
+		v.Alert = alert
+		v.Receivers = make([]TestReceiverResult, 0, len(c.Receivers))
+		v.NotifedAt = notifiedAt
+		for _, result := range m {
+			v.Receivers = append(v.Receivers, result)
+		}
+
+		// Make sure the return order is deterministic.
+		sort.Slice(v.Receivers, func(i, j int) bool {
+			return v.Receivers[i].Name < v.Receivers[j].Name
+		})
+
+		return v
+	}
+
+	// invalid keeps track of all invalid receiver configurations
+	var invalid []result
+	// jobs keeps track of all receivers that need to be sent test notifications
+	var jobs []job
+
+	for _, receiver := range c.Receivers {
+		integrations := buildReceiverIntegrations(receiver, tmpl, logger)
+		for _, integration := range integrations {
+			if integration.Error != nil {
+				invalid = append(invalid, result{
+					Receiver:    receiver,
+					Integration: &integration.Integration,
+					Error:       integration.Error,
+				})
+			} else {
+				jobs = append(jobs, job{
+					Receiver:    receiver,
+					Integration: &integration.Integration,
+				})
+			}
+		}
+	}
+
+	if len(invalid)+len(jobs) == 0 {
+		return nil, ErrNoReceivers
+	}
+
+	if len(jobs) == 0 {
+		return newTestReceiversResult(testAlert, invalid, now), nil
+	}
+
+	numWorkers := maxTestReceiversWorkers
+	if numWorkers > len(jobs) {
+		numWorkers = len(jobs)
+	}
+
+	resultCh := make(chan result, len(jobs))
+	jobCh := make(chan job, len(jobs))
+	for _, job := range jobs {
+		jobCh <- job
+	}
+	close(jobCh)
+
+	g, ctx := errgroup.WithContext(ctx)
+	for i := 0; i < numWorkers; i++ {
+		g.Go(func() error {
+			for job := range jobCh {
+				v := result{
+					Receiver:    job.Receiver,
+					Integration: job.Integration,
+				}
+				if _, err := job.Integration.Notify(notify.WithReceiverName(ctx, job.Receiver.Name), &testAlert); err != nil {
+					v.Error = err
+				}
+				resultCh <- v
+			}
+			return nil
+		})
+	}
+	g.Wait() // nolint
+	close(resultCh)
+
+	results := make([]result, 0, len(jobs))
+	for next := range resultCh {
+		results = append(results, next)
+	}
+
+	receivers := make([]*open_api_models.TestableReceiver, 0, len(api.alertmanagerConfig.Receivers))
+	for i := range api.alertmanagerConfig.Receivers {
+		receivers = append(receivers, &open_api_models.TestableReceiver{Name: &api.alertmanagerConfig.Receivers[i].Name})
+	}
+
+	receiver_ops.NewPostTestReceiversOK().WriteResponse(http.ResponseWriter())
 	return receiver_ops.NewGetReceiversOK().WithPayload(receivers)
 }
 

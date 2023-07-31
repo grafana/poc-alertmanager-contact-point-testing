@@ -536,6 +536,13 @@ definitions:
         type: string
     required:
       - name
+  testableReceiver:
+    type: object
+    properties:
+      name:
+        type: string
+    required:
+      - name
   labelSet:
     type: object
     additionalProperties:

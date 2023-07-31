@@ -787,6 +787,17 @@ func init() {
         }
       }
     },
+    "testableReceiver": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
     "versionInfo": {
       "type": "object",
       "required": [
@@ -1650,6 +1661,17 @@ func init() {
             "active",
             "pending"
           ]
+        }
+      }
+    },
+    "testableReceiver": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
         }
       }
     },
