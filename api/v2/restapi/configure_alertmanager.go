@@ -30,6 +30,7 @@ import (
 	"github.com/prometheus/alertmanager/api/v2/restapi/operations/general"
 	"github.com/prometheus/alertmanager/api/v2/restapi/operations/receiver"
 	"github.com/prometheus/alertmanager/api/v2/restapi/operations/silence"
+	"github.com/prometheus/alertmanager/api/v2/restapi/operations/testable_receiver"
 )
 
 //go:generate swagger generate server --target ../../v2 --name Alertmanager --spec ../openapi.yaml --principal interface{} --exclude-main
@@ -101,9 +102,9 @@ func configureAPI(api *operations.AlertmanagerAPI) http.Handler {
 			return middleware.NotImplemented("operation silence.PostSilences has not yet been implemented")
 		})
 	}
-	if api.ReceiverPostTestReceiversHandler == nil {
-		api.ReceiverPostTestReceiversHandler = receiver.PostTestReceiversHandlerFunc(func(params receiver.PostTestReceiversParams) middleware.Responder {
-			return middleware.NotImplemented("operation receiver.PostTestReceivers has not yet been implemented")
+	if api.TestableReceiverPostTestReceiversHandler == nil {
+		api.TestableReceiverPostTestReceiversHandler = testable_receiver.PostTestReceiversHandlerFunc(func(params testable_receiver.PostTestReceiversParams) middleware.Responder {
+			return middleware.NotImplemented("operation testable_receiver.PostTestReceivers has not yet been implemented")
 		})
 	}
 

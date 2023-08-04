@@ -29,6 +29,7 @@ import (
 	"github.com/prometheus/alertmanager/api/v2/client/general"
 	"github.com/prometheus/alertmanager/api/v2/client/receiver"
 	"github.com/prometheus/alertmanager/api/v2/client/silence"
+	"github.com/prometheus/alertmanager/api/v2/client/testable_receiver"
 )
 
 // Default alertmanager API HTTP client.
@@ -78,6 +79,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *Alertmanag
 	cli.General = general.New(transport, formats)
 	cli.Receiver = receiver.New(transport, formats)
 	cli.Silence = silence.New(transport, formats)
+	cli.TestableReceiver = testable_receiver.New(transport, formats)
 	return cli
 }
 
@@ -132,6 +134,8 @@ type AlertmanagerAPI struct {
 
 	Silence silence.ClientService
 
+	TestableReceiver testable_receiver.ClientService
+
 	Transport runtime.ClientTransport
 }
 
@@ -143,4 +147,5 @@ func (c *AlertmanagerAPI) SetTransport(transport runtime.ClientTransport) {
 	c.General.SetTransport(transport)
 	c.Receiver.SetTransport(transport)
 	c.Silence.SetTransport(transport)
+	c.TestableReceiver.SetTransport(transport)
 }

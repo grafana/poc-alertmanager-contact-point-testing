@@ -27,6 +27,7 @@ import (
 
 	apiv1 "github.com/prometheus/alertmanager/api/v1"
 	apiv2 "github.com/prometheus/alertmanager/api/v2"
+	open_api_models "github.com/prometheus/alertmanager/api/v2/models"
 	"github.com/prometheus/alertmanager/cluster"
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/dispatch"
@@ -70,6 +71,8 @@ type Options struct {
 	// Registry is used to register Prometheus metrics. If nil, no metrics
 	// registration will happen.
 	Registry prometheus.Registerer
+	// TestableReceiver is used to test receivers dynamically without saving them.
+	TestableReceiver open_api_models.TestableReceiver
 	// GroupFunc returns a list of alert groups. The alerts are grouped
 	// according to the current active configuration. Alerts returned are
 	// filtered by the arguments provided to the function.

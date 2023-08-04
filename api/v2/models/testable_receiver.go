@@ -33,16 +33,40 @@ import (
 // swagger:model testableReceiver
 type TestableReceiver struct {
 
+	// hook
+	// Required: true
+	Hook *string `json:"hook"`
+
 	// name
 	// Required: true
 	Name *string `json:"name"`
+
+	// type
+	// Required: true
+	Type *string `json:"type"`
+
+	// uid
+	// Required: true
+	UID *string `json:"uid"`
 }
 
 // Validate validates this testable receiver
 func (m *TestableReceiver) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateHook(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateName(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateType(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateUID(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -52,9 +76,36 @@ func (m *TestableReceiver) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *TestableReceiver) validateHook(formats strfmt.Registry) error {
+
+	if err := validate.Required("hook", "body", m.Hook); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (m *TestableReceiver) validateName(formats strfmt.Registry) error {
 
 	if err := validate.Required("name", "body", m.Name); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *TestableReceiver) validateType(formats strfmt.Registry) error {
+
+	if err := validate.Required("type", "body", m.Type); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *TestableReceiver) validateUID(formats strfmt.Registry) error {
+
+	if err := validate.Required("uid", "body", m.UID); err != nil {
 		return err
 	}
 

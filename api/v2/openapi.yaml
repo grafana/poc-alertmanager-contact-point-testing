@@ -45,16 +45,16 @@ paths:
   /receivers/test:
     post:
       tags:
-        - receiver
+        - testableReceiver
       operationId: postTestReceivers
       description: Test all receivers (name of notification integrations)
       parameters:
         - in: body
-          name: receiver
+          name: testableReceivers
           description: The receivers to test
           required: true
           schema:
-            $ref: '#/definitions/receiver'
+            $ref: '#/definitions/testableReceiver'
       responses:
         '200':
           description: Successfully tested all receivers
@@ -539,10 +539,19 @@ definitions:
   testableReceiver:
     type: object
     properties:
+      uid:
+        type: string
       name:
         type: string
+      type:
+        type: string
+      hook:
+        type: string
     required:
+      - uid
       - name
+      - type
+      - hook
   labelSet:
     type: object
     additionalProperties:

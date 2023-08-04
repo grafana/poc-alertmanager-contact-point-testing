@@ -234,17 +234,17 @@ func init() {
       "post": {
         "description": "Test all receivers (name of notification integrations)",
         "tags": [
-          "receiver"
+          "testableReceiver"
         ],
         "operationId": "postTestReceivers",
         "parameters": [
           {
             "description": "The receivers to test",
-            "name": "receiver",
+            "name": "testableReceivers",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/receiver"
+              "$ref": "#/definitions/testableReceiver"
             }
           }
         ],
@@ -790,10 +790,22 @@ func init() {
     "testableReceiver": {
       "type": "object",
       "required": [
-        "name"
+        "uid",
+        "name",
+        "type",
+        "hook"
       ],
       "properties": {
+        "hook": {
+          "type": "string"
+        },
         "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "uid": {
           "type": "string"
         }
       }
@@ -1090,17 +1102,17 @@ func init() {
       "post": {
         "description": "Test all receivers (name of notification integrations)",
         "tags": [
-          "receiver"
+          "testableReceiver"
         ],
         "operationId": "postTestReceivers",
         "parameters": [
           {
             "description": "The receivers to test",
-            "name": "receiver",
+            "name": "testableReceivers",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/receiver"
+              "$ref": "#/definitions/testableReceiver"
             }
           }
         ],
@@ -1667,10 +1679,22 @@ func init() {
     "testableReceiver": {
       "type": "object",
       "required": [
-        "name"
+        "uid",
+        "name",
+        "type",
+        "hook"
       ],
       "properties": {
+        "hook": {
+          "type": "string"
+        },
         "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "uid": {
           "type": "string"
         }
       }
