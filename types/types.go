@@ -450,3 +450,34 @@ func CalcSilenceState(start, end time.Time) SilenceState {
 	}
 	return SilenceStateExpired
 }
+
+// A TestableReceiver is utilized to dynamically test receivers.
+type TestableReceiver struct {
+	// group interval
+	// Required: true
+	GroupInterval *string `json:"group_interval"`
+
+	// group wait
+	// Required: true
+	GroupWait *string `json:"group_wait"`
+
+	// hook
+	// Required: true
+	Hook *string `json:"hook"`
+
+	// name
+	// Required: true
+	Name *string `json:"name"`
+
+	// repeat interval
+	// Required: true
+	RepeatInterval *string `json:"repeat_interval"`
+
+	// type
+	// Required: true
+	Type *string `json:"type"`
+
+	// uid
+	// Required: true
+	UID *string `json:"uid"`
+}

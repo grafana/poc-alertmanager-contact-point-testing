@@ -33,6 +33,17 @@ import (
 // swagger:model testableReceiver
 type TestableReceiver struct {
 
+	// discord configs
+	DiscordConfigs []string `json:"discord_configs"`
+
+	// group interval
+	// Required: true
+	GroupInterval *string `json:"group_interval"`
+
+	// group wait
+	// Required: true
+	GroupWait *string `json:"group_wait"`
+
 	// hook
 	// Required: true
 	Hook *string `json:"hook"`
@@ -40,6 +51,10 @@ type TestableReceiver struct {
 	// name
 	// Required: true
 	Name *string `json:"name"`
+
+	// repeat interval
+	// Required: true
+	RepeatInterval *string `json:"repeat_interval"`
 
 	// type
 	// Required: true
@@ -54,11 +69,23 @@ type TestableReceiver struct {
 func (m *TestableReceiver) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateGroupInterval(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateGroupWait(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateHook(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if err := m.validateName(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRepeatInterval(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -76,6 +103,24 @@ func (m *TestableReceiver) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *TestableReceiver) validateGroupInterval(formats strfmt.Registry) error {
+
+	if err := validate.Required("group_interval", "body", m.GroupInterval); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *TestableReceiver) validateGroupWait(formats strfmt.Registry) error {
+
+	if err := validate.Required("group_wait", "body", m.GroupWait); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (m *TestableReceiver) validateHook(formats strfmt.Registry) error {
 
 	if err := validate.Required("hook", "body", m.Hook); err != nil {
@@ -88,6 +133,15 @@ func (m *TestableReceiver) validateHook(formats strfmt.Registry) error {
 func (m *TestableReceiver) validateName(formats strfmt.Registry) error {
 
 	if err := validate.Required("name", "body", m.Name); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *TestableReceiver) validateRepeatInterval(formats strfmt.Registry) error {
+
+	if err := validate.Required("repeat_interval", "body", m.RepeatInterval); err != nil {
 		return err
 	}
 

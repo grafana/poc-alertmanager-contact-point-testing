@@ -158,6 +158,15 @@ func AlertToOpenAPIAlert(alert *types.Alert, status types.AlertStatus, receivers
 	return aa
 }
 
+// func OpenAPITestableReceiverToTestableReceiver(apiTestableReceivers open_api_models.TestableReceiver) []*types.TestableReceiver {
+// 	testableReceivers := []*types.TestableReceiver{}
+// 	for _, apiTestableReceiver := range apiTestableReceivers {
+// 		testableReceiver := types.TestableReceiver{
+// 			TestableReceiver
+// 		}
+// 	}
+// }
+
 // OpenAPIAlertsToAlerts converts open_api_models.PostableAlerts to []*types.Alert.
 func OpenAPIAlertsToAlerts(apiAlerts open_api_models.PostableAlerts) []*types.Alert {
 	alerts := []*types.Alert{}

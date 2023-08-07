@@ -793,13 +793,31 @@ func init() {
         "uid",
         "name",
         "type",
-        "hook"
+        "hook",
+        "group_wait",
+        "group_interval",
+        "repeat_interval"
       ],
       "properties": {
+        "discord_configs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "group_interval": {
+          "type": "string"
+        },
+        "group_wait": {
+          "type": "string"
+        },
         "hook": {
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "repeat_interval": {
           "type": "string"
         },
         "type": {
@@ -1682,13 +1700,31 @@ func init() {
         "uid",
         "name",
         "type",
-        "hook"
+        "hook",
+        "group_wait",
+        "group_interval",
+        "repeat_interval"
       ],
       "properties": {
+        "discord_configs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "group_interval": {
+          "type": "string"
+        },
+        "group_wait": {
+          "type": "string"
+        },
         "hook": {
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "repeat_interval": {
           "type": "string"
         },
         "type": {

@@ -547,11 +547,24 @@ definitions:
         type: string
       hook:
         type: string
+      group_wait:
+        type: string
+      group_interval:
+        type: string
+      repeat_interval:
+        type: string
+      discord_configs:
+        type: array
+        items: 
+          type: string
     required:
       - uid
       - name
       - type
       - hook
+      - group_wait
+      - group_interval
+      - repeat_interval
   labelSet:
     type: object
     additionalProperties:

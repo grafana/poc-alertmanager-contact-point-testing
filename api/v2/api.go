@@ -250,18 +250,44 @@ func (api *API) getReceiversHandler(params receiver_ops.GetReceiversParams) midd
 
 func (api *API) postTestReceiversHandler(params testable_receiver_ops.PostTestReceiversParams) middleware.Responder {
 
+	type TestableReceiver struct {
+		Name           string
+		UID            string
+		Hook           string
+		Type           string
+		GroupWait      string
+		GroupInterval  string
+		RepeatInterval string
+	}
+
+	var testableReceiver TestableReceiver
+
 	logger := api.requestLogger(params.HTTPRequest)
 
-	testableReceivers := params.TestableReceivers
+	// var testableReceiver TestableReceiver
+	// ctx := context.Background()
 
+	// params.HTTPRequest
+	testableReceiver.Name = *params.TestableReceivers.Name
+	testableReceiver.UID = *params.TestableReceivers.UID
+	testableReceiver.Hook = *params.TestableReceivers.Hook
+	testableReceiver.Type = *params.TestableReceivers.Type
+	testableReceiver.GroupWait = *params.TestableReceivers.GroupWait
+	testableReceiver.GroupInterval = *params.TestableReceivers.GroupInterval
+	testableReceiver.RepeatInterval = *params.TestableReceivers.RepeatInterval
+
+	// make([]params.TestableReceivers, 0, len(params.TestableReceivers))
 	fmt.Printf("logger: %v\n", logger)
 	fmt.Printf("params: %v\n", params.HTTPRequest.Body)
 
-	fmt.Printf("receivers: %#v\n", testableReceivers)
+	// fmt.Printf("receivers: %#v\n", testableReceiver)
+	fmt.Printf("Receiver: %+v\n", *&params.TestableReceivers.DiscordConfigs)
+
+	// fmt.Printf("Context: %+v\n", ctx)
 
 	// job contains all metadata required to test a receiver
 	type job struct {
-		TestableReceiver *open_api_models.TestableReceiver
+		TestableReceiver TestableReceiver
 		Integration      *notify.Integration
 	}
 
@@ -351,10 +377,55 @@ func (api *API) postTestReceiversHandler(params testable_receiver_ops.PostTestRe
 		return integrations
 	}
 
-	// // invalid keeps track of all invalid receiver configurations
+	// invalid keeps track of all invalid receiver configurations
 	// var invalid []result
-	// // jobs keeps track of all receivers that need to be sent test notifications
-	// var jobs []job
+	// jobs keeps track of all receivers that need to be sent test notifications
+	var jobs []job
+
+	// g, ctx := errgroup.WithContext(ctx)
+	// integration := buildReceiverIntegrations(&api.receivers, &template.Template{}, logger)
+
+	jobs = append(jobs, job{
+		TestableReceiver: testableReceiver,
+		Integration:      &notify.Integration{},
+	})
+
+	var notifier config.DiscordConfig
+
+	buildReceiverIntegrations(&api.receivers, &template.Template{}, logger)
+
+	notifier.Message = "test message"
+	// notify.WithGroupKey("https://discord.com/api/webhooks/1136961561269911612/4WV-ePxMkUIDNVknggGGLG_InI5xBvPvAyN76ZpdMXutaWnevEIWj2n8C7MB071az1fG"
+	notifier.Title = "Dummy message"
+
+	// for job := range jobs {
+	// 	if _, err := job.Integration.Notify(notify.WithReceiverName(ctx, job.TestableReceiver.Name), alert); err != nil {
+
+	// 	}
+	// }
+
+	// v := result{
+	// 	TestableReceiver: testableReceiver,
+	// 	Integration:      &integration.Integration,
+	// 	Error:            nil,
+	// }
+
+	// for i := 0; i < 10; i++ {
+	// 	g.Go(func() error {
+	// 		for job := range jobCh {
+	// 			v := result{
+	// 				Receiver:    job.Receiver,
+	// 				Integration: job.Integration,
+	// 			}
+	// 			if _, err := job.Integration.Notify(notify.WithReceiverName(ctx, job.Receiver.Name), &testAlert); err != nil {
+	// 				v.Error = err
+	// 			}
+	// 			resultCh <- v
+	// 		}
+	// 		return nil
+	// 	})
+	// }
+	// g.Wait() // nolint
 
 	// for _, testableReceiver := range testableReceivers {
 	// 	integrations := buildReceiverIntegrations(testableReceiver, &template.Template{}, logger)
@@ -374,147 +445,17 @@ func (api *API) postTestReceiversHandler(params testable_receiver_ops.PostTestRe
 	// 	}
 	// }
 
-	buildReceiverIntegrations(&api.receivers, &template.Template{}, logger)
+	// integration := buildReceiverIntegrations(testableReceiver, &template.Template{}, logger)
+
+	// jobs = append(jobs, job{
+	// 	TestableReceiver: testableReceiver,
+	// 	Integration:      &integration.Integration,
+	// })
+
+	// buildReceiverIntegrations(&api.receivers, &template.Template{}, logger)
 
 	return testable_receiver_ops.NewPostTestReceiversBadRequest()
 }
-
-// func (api *API) postTestReceiversHandler(params receiver_ops.PostTestReceiversParams) middleware.Responder {
-
-// 	// var (
-// 	// 	ErrNoReceivers = errors.New("no receivers with configuration set")
-// 	// )
-
-// 	logger := api.requestLogger(params.HTTPRequest)
-
-// 	// testableReceivers, err :=
-// 	now := time.Now()
-
-// 	now.Local().Add(200)
-// 	logger.Log()
-
-// 	api.mtx.RLock()
-// 	defer api.mtx.RUnlock()
-
-// 	// job contains all metadata required to test a receiver
-// 	type job struct {
-// 		Receiver    *config.Receiver
-// 		Integration *notify.Integration
-// 	}
-
-// 	newTestReceiversResult := func(alert types.Alert, results []result, notifiedAt time.Time) *TestReceiversResult {
-// 		m := make(map[string]TestReceiverResult)
-// 		for _, receiver := range c.Receivers {
-// 			// set up the result for this receiver
-// 			m[receiver.Name] = TestReceiverResult{
-// 				Name:          receiver.Name,
-// 				ConfigResults: []TestReceiverConfigResult{},
-// 			}
-// 		}
-// 		for _, result := range results {
-// 			tmp := m[result.Receiver.Name]
-// 			status := "ok"
-// 			if result.Error != nil {
-// 				status = "failed"
-// 			}
-// 			tmp.ConfigResults = append(tmp.ConfigResults, TestReceiverConfigResult{
-// 				Name:   result.Integration.Name(),
-// 				Status: status,
-// 				Error:  result.Error,
-// 			})
-// 			m[result.Receiver.Name] = tmp
-// 		}
-// 		v := new(TestReceiversResult)
-// 		v.Alert = alert
-// 		v.Receivers = make([]TestReceiverResult, 0, len(c.Receivers))
-// 		v.NotifedAt = notifiedAt
-// 		for _, result := range m {
-// 			v.Receivers = append(v.Receivers, result)
-// 		}
-
-// 		// Make sure the return order is deterministic.
-// 		sort.Slice(v.Receivers, func(i, j int) bool {
-// 			return v.Receivers[i].Name < v.Receivers[j].Name
-// 		})
-
-// 		return v
-// 	}
-
-// 	// invalid keeps track of all invalid receiver configurations
-// 	var invalid []result
-// 	// jobs keeps track of all receivers that need to be sent test notifications
-// 	var jobs []job
-
-// 	for _, receiver := range c.Receivers {
-// 		integrations := buildReceiverIntegrations(receiver, tmpl, logger)
-// 		for _, integration := range integrations {
-// 			if integration.Error != nil {
-// 				invalid = append(invalid, result{
-// 					Receiver:    receiver,
-// 					Integration: &integration.Integration,
-// 					Error:       integration.Error,
-// 				})
-// 			} else {
-// 				jobs = append(jobs, job{
-// 					Receiver:    receiver,
-// 					Integration: &integration.Integration,
-// 				})
-// 			}
-// 		}
-// 	}
-
-// 	if len(invalid)+len(jobs) == 0 {
-// 		return nil, ErrNoReceivers
-// 	}
-
-// 	if len(jobs) == 0 {
-// 		return newTestReceiversResult(testAlert, invalid, now), nil
-// 	}
-
-// 	numWorkers := maxTestReceiversWorkers
-// 	if numWorkers > len(jobs) {
-// 		numWorkers = len(jobs)
-// 	}
-
-// 	resultCh := make(chan result, len(jobs))
-// 	jobCh := make(chan job, len(jobs))
-// 	for _, job := range jobs {
-// 		jobCh <- job
-// 	}
-// 	close(jobCh)
-
-// 	g, ctx := errgroup.WithContext(ctx)
-// 	for i := 0; i < numWorkers; i++ {
-// 		g.Go(func() error {
-// 			for job := range jobCh {
-// 				v := result{
-// 					Receiver:    job.Receiver,
-// 					Integration: job.Integration,
-// 				}
-// 				if _, err := job.Integration.Notify(notify.WithReceiverName(ctx, job.Receiver.Name), &testAlert); err != nil {
-// 					v.Error = err
-// 				}
-// 				resultCh <- v
-// 			}
-// 			return nil
-// 		})
-// 	}
-// 	g.Wait() // nolint
-// 	close(resultCh)
-
-// 	results := make([]result, 0, len(jobs))
-// 	for next := range resultCh {
-// 		results = append(results, next)
-// 	}
-
-// 	receivers := make([]*open_api_models.TestableReceiver, 0, len(api.alertmanagerConfig.Receivers))
-// 	for i := range api.alertmanagerConfig.Receivers {
-// 		receivers = append(receivers, &open_api_models.TestableReceiver{Name: &api.alertmanagerConfig.Receivers[i].Name})
-// 	}
-
-// 	receiver_ops.NewPostTestReceiversOK().WriteResponse(http.ResponseWriter())
-// 	return receiver_ops.NewGetReceiversOK().WithPayload(receivers)
-// }
 
 func (api *API) getAlertsHandler(params alert_ops.GetAlertsParams) middleware.Responder {
 	var (
