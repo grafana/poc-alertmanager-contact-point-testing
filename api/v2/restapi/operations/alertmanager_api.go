@@ -60,6 +60,7 @@ func NewAlertmanagerAPI(spec *loads.Document) *AlertmanagerAPI {
 		BearerAuthenticator: security.BearerAuth,
 
 		JSONConsumer: runtime.JSONConsumer(),
+		TxtConsumer:  runtime.TextConsumer(),
 
 		JSONProducer: runtime.JSONProducer(),
 
@@ -93,6 +94,9 @@ func NewAlertmanagerAPI(spec *loads.Document) *AlertmanagerAPI {
 		TestableReceiverPostTestReceiversHandler: testable_receiver.PostTestReceiversHandlerFunc(func(params testable_receiver.PostTestReceiversParams) middleware.Responder {
 			return middleware.NotImplemented("operation testable_receiver.PostTestReceivers has not yet been implemented")
 		}),
+		TestableReceiverPostTestReceiversConfigHandler: testable_receiver.PostTestReceiversConfigHandlerFunc(func(params testable_receiver.PostTestReceiversConfigParams) middleware.Responder {
+			return middleware.NotImplemented("operation testable_receiver.PostTestReceiversConfig has not yet been implemented")
+		}),
 	}
 }
 
@@ -124,6 +128,9 @@ type AlertmanagerAPI struct {
 	// JSONConsumer registers a consumer for the following mime types:
 	//   - application/json
 	JSONConsumer runtime.Consumer
+	// TxtConsumer registers a consumer for the following mime types:
+	//   - text/plain
+	TxtConsumer runtime.Consumer
 
 	// JSONProducer registers a producer for the following mime types:
 	//   - application/json
@@ -149,6 +156,8 @@ type AlertmanagerAPI struct {
 	SilencePostSilencesHandler silence.PostSilencesHandler
 	// TestableReceiverPostTestReceiversHandler sets the operation handler for the post test receivers operation
 	TestableReceiverPostTestReceiversHandler testable_receiver.PostTestReceiversHandler
+	// TestableReceiverPostTestReceiversConfigHandler sets the operation handler for the post test receivers config operation
+	TestableReceiverPostTestReceiversConfigHandler testable_receiver.PostTestReceiversConfigHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -221,6 +230,9 @@ func (o *AlertmanagerAPI) Validate() error {
 	if o.JSONConsumer == nil {
 		unregistered = append(unregistered, "JSONConsumer")
 	}
+	if o.TxtConsumer == nil {
+		unregistered = append(unregistered, "TxtConsumer")
+	}
 
 	if o.JSONProducer == nil {
 		unregistered = append(unregistered, "JSONProducer")
@@ -256,6 +268,9 @@ func (o *AlertmanagerAPI) Validate() error {
 	if o.TestableReceiverPostTestReceiversHandler == nil {
 		unregistered = append(unregistered, "testable_receiver.PostTestReceiversHandler")
 	}
+	if o.TestableReceiverPostTestReceiversConfigHandler == nil {
+		unregistered = append(unregistered, "testable_receiver.PostTestReceiversConfigHandler")
+	}
 
 	if len(unregistered) > 0 {
 		return fmt.Errorf("missing registration: %s", strings.Join(unregistered, ", "))
@@ -287,6 +302,8 @@ func (o *AlertmanagerAPI) ConsumersFor(mediaTypes []string) map[string]runtime.C
 		switch mt {
 		case "application/json":
 			result["application/json"] = o.JSONConsumer
+		case "text/plain":
+			result["text/plain"] = o.TxtConsumer
 		}
 
 		if c, ok := o.customConsumers[mt]; ok {
@@ -384,6 +401,10 @@ func (o *AlertmanagerAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/receivers/test"] = testable_receiver.NewPostTestReceivers(o.context, o.TestableReceiverPostTestReceiversHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/receivers/test/config"] = testable_receiver.NewPostTestReceiversConfig(o.context, o.TestableReceiverPostTestReceiversConfigHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP

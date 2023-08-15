@@ -54,6 +54,7 @@ func configureAPI(api *operations.AlertmanagerAPI) http.Handler {
 	// api.UseRedoc()
 
 	api.JSONConsumer = runtime.JSONConsumer()
+	api.TxtConsumer = runtime.TextConsumer()
 
 	api.JSONProducer = runtime.JSONProducer()
 
@@ -105,6 +106,11 @@ func configureAPI(api *operations.AlertmanagerAPI) http.Handler {
 	if api.TestableReceiverPostTestReceiversHandler == nil {
 		api.TestableReceiverPostTestReceiversHandler = testable_receiver.PostTestReceiversHandlerFunc(func(params testable_receiver.PostTestReceiversParams) middleware.Responder {
 			return middleware.NotImplemented("operation testable_receiver.PostTestReceivers has not yet been implemented")
+		})
+	}
+	if api.TestableReceiverPostTestReceiversConfigHandler == nil {
+		api.TestableReceiverPostTestReceiversConfigHandler = testable_receiver.PostTestReceiversConfigHandlerFunc(func(params testable_receiver.PostTestReceiversConfigParams) middleware.Responder {
+			return middleware.NotImplemented("operation testable_receiver.PostTestReceiversConfig has not yet been implemented")
 		})
 	}
 

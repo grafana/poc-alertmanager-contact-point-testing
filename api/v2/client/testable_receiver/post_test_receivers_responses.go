@@ -20,11 +20,13 @@ package testable_receiver
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"context"
 	"fmt"
 	"io"
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // PostTestReceiversReader is a Reader for the PostTestReceivers structure.
@@ -75,6 +77,7 @@ PostTestReceiversOK describes a response with status code 200, with default head
 Successfully tested all receivers
 */
 type PostTestReceiversOK struct {
+	Payload *PostTestReceiversOKBody
 }
 
 // IsSuccess returns true when this post test receivers o k response has a 2xx status code
@@ -103,14 +106,25 @@ func (o *PostTestReceiversOK) IsCode(code int) bool {
 }
 
 func (o *PostTestReceiversOK) Error() string {
-	return fmt.Sprintf("[POST /receivers/test][%d] postTestReceiversOK ", 200)
+	return fmt.Sprintf("[POST /receivers/test][%d] postTestReceiversOK  %+v", 200, o.Payload)
 }
 
 func (o *PostTestReceiversOK) String() string {
-	return fmt.Sprintf("[POST /receivers/test][%d] postTestReceiversOK ", 200)
+	return fmt.Sprintf("[POST /receivers/test][%d] postTestReceiversOK  %+v", 200, o.Payload)
+}
+
+func (o *PostTestReceiversOK) GetPayload() *PostTestReceiversOKBody {
+	return o.Payload
 }
 
 func (o *PostTestReceiversOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(PostTestReceiversOKBody)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
 
 	return nil
 }
@@ -295,5 +309,46 @@ func (o *PostTestReceiversInternalServerError) readResponse(response runtime.Cli
 		return err
 	}
 
+	return nil
+}
+
+/*
+PostTestReceiversOKBody post test receivers o k body
+swagger:model PostTestReceiversOKBody
+*/
+type PostTestReceiversOKBody struct {
+
+	// receiver
+	Receiver string `json:"receiver,omitempty"`
+
+	// status
+	Status string `json:"status,omitempty"`
+}
+
+// Validate validates this post test receivers o k body
+func (o *PostTestReceiversOKBody) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this post test receivers o k body based on context it is used
+func (o *PostTestReceiversOKBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (o *PostTestReceiversOKBody) MarshalBinary() ([]byte, error) {
+	if o == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(o)
+}
+
+// UnmarshalBinary interface implementation
+func (o *PostTestReceiversOKBody) UnmarshalBinary(b []byte) error {
+	var res PostTestReceiversOKBody
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*o = res
 	return nil
 }

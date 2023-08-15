@@ -46,11 +46,13 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	PostTestReceivers(params *PostTestReceiversParams, opts ...ClientOption) (*PostTestReceiversOK, error)
 
+	PostTestReceiversConfig(params *PostTestReceiversConfigParams, opts ...ClientOption) (*PostTestReceiversConfigOK, error)
+
 	SetTransport(transport runtime.ClientTransport)
 }
 
 /*
-PostTestReceivers Test all receivers (name of notification integrations)
+PostTestReceivers Test all receivers (name of notification integrations) from existing configuration file
 */
 func (a *Client) PostTestReceivers(params *PostTestReceiversParams, opts ...ClientOption) (*PostTestReceiversOK, error) {
 	// TODO: Validate the params before sending
@@ -84,6 +86,44 @@ func (a *Client) PostTestReceivers(params *PostTestReceiversParams, opts ...Clie
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for postTestReceivers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+PostTestReceiversConfig Test all receivers (name of notification integrations) from inserted configuration file
+*/
+func (a *Client) PostTestReceiversConfig(params *PostTestReceiversConfigParams, opts ...ClientOption) (*PostTestReceiversConfigOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostTestReceiversConfigParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "postTestReceiversConfig",
+		Method:             "POST",
+		PathPattern:        "/receivers/test/config",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"text/plain"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostTestReceiversConfigReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostTestReceiversConfigOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for postTestReceiversConfig: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

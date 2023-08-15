@@ -15,7 +15,9 @@ package v2
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"regexp"
 	"sort"
 	"sync"
@@ -47,35 +49,22 @@ import (
 	"github.com/prometheus/alertmanager/dispatch"
 	"github.com/prometheus/alertmanager/pkg/labels"
 	"github.com/prometheus/alertmanager/provider"
+	testable_receiver "github.com/prometheus/alertmanager/receiver"
 	"github.com/prometheus/alertmanager/silence"
 	"github.com/prometheus/alertmanager/silence/silencepb"
 	"github.com/prometheus/alertmanager/template"
 	"github.com/prometheus/alertmanager/types"
-
-	"github.com/prometheus/alertmanager/notify"
-	"github.com/prometheus/alertmanager/notify/discord"
-	"github.com/prometheus/alertmanager/notify/email"
-	"github.com/prometheus/alertmanager/notify/opsgenie"
-	"github.com/prometheus/alertmanager/notify/pagerduty"
-	"github.com/prometheus/alertmanager/notify/pushover"
-	"github.com/prometheus/alertmanager/notify/slack"
-	"github.com/prometheus/alertmanager/notify/sns"
-	"github.com/prometheus/alertmanager/notify/telegram"
-	"github.com/prometheus/alertmanager/notify/victorops"
-	"github.com/prometheus/alertmanager/notify/webhook"
-	"github.com/prometheus/alertmanager/notify/wechat"
 )
 
 // API represents an Alertmanager API v2
 type API struct {
-	peer              cluster.ClusterPeer
-	silences          *silence.Silences
-	alerts            provider.Alerts
-	receivers         config.Receiver
-	testableReceivers open_api_models.TestableReceiver
-	alertGroups       groupsFn
-	getAlertStatus    getAlertStatusFn
-	uptime            time.Time
+	peer           cluster.ClusterPeer
+	silences       *silence.Silences
+	alerts         provider.Alerts
+	receivers      config.Receiver
+	alertGroups    groupsFn
+	getAlertStatus getAlertStatusFn
+	uptime         time.Time
 
 	// mtx protects alertmanagerConfig, setAlertStatus and route.
 	mtx sync.RWMutex
@@ -142,6 +131,7 @@ func NewAPI(
 	openAPI.GeneralGetStatusHandler = general_ops.GetStatusHandlerFunc(api.getStatusHandler)
 	openAPI.ReceiverGetReceiversHandler = receiver_ops.GetReceiversHandlerFunc(api.getReceiversHandler)
 	openAPI.TestableReceiverPostTestReceiversHandler = testable_receiver_ops.PostTestReceiversHandlerFunc(api.postTestReceiversHandler)
+	openAPI.TestableReceiverPostTestReceiversConfigHandler = testable_receiver_ops.PostTestReceiversConfigHandlerFunc(api.postTestReceiversConfigHandler)
 	openAPI.SilenceDeleteSilenceHandler = silence_ops.DeleteSilenceHandlerFunc(api.deleteSilenceHandler)
 	openAPI.SilenceGetSilenceHandler = silence_ops.GetSilenceHandlerFunc(api.getSilenceHandler)
 	openAPI.SilenceGetSilencesHandler = silence_ops.GetSilencesHandlerFunc(api.getSilencesHandler)
@@ -250,211 +240,103 @@ func (api *API) getReceiversHandler(params receiver_ops.GetReceiversParams) midd
 
 func (api *API) postTestReceiversHandler(params testable_receiver_ops.PostTestReceiversParams) middleware.Responder {
 
-	type TestableReceiver struct {
-		Name           string
-		UID            string
-		Hook           string
-		Type           string
-		GroupWait      string
-		GroupInterval  string
-		RepeatInterval string
-	}
+	var (
+		cfg = api.alertmanagerConfig
+		ctx = params.HTTPRequest.Context()
+	)
 
-	var testableReceiver TestableReceiver
+	if cfg != nil {
+		tmpl, err := template.FromGlobs(cfg.Templates)
+		if err != nil {
+			return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
+		}
+		u, err := url.Parse("https://example.com")
+		if err != nil {
+			return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
+		}
+		tmpl.ExternalURL = u
+		if err != nil {
+			return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
+		}
 
-	logger := api.requestLogger(params.HTTPRequest)
+		c := testable_receiver.TestReceiversParams{
+			Receivers: cfg.Receivers,
+		}
 
-	// var testableReceiver TestableReceiver
-	// ctx := context.Background()
+		results, err := testable_receiver.TestReceivers(ctx, c, tmpl)
+		if err != nil {
+			return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
+		}
 
-	// params.HTTPRequest
-	testableReceiver.Name = *params.TestableReceivers.Name
-	testableReceiver.UID = *params.TestableReceivers.UID
-	testableReceiver.Hook = *params.TestableReceivers.Hook
-	testableReceiver.Type = *params.TestableReceivers.Type
-	testableReceiver.GroupWait = *params.TestableReceivers.GroupWait
-	testableReceiver.GroupInterval = *params.TestableReceivers.GroupInterval
-	testableReceiver.RepeatInterval = *params.TestableReceivers.RepeatInterval
-
-	// make([]params.TestableReceivers, 0, len(params.TestableReceivers))
-	fmt.Printf("logger: %v\n", logger)
-	fmt.Printf("params: %v\n", params.HTTPRequest.Body)
-
-	// fmt.Printf("receivers: %#v\n", testableReceiver)
-	fmt.Printf("Receiver: %+v\n", *&params.TestableReceivers.DiscordConfigs)
-
-	// fmt.Printf("Context: %+v\n", ctx)
-
-	// job contains all metadata required to test a receiver
-	type job struct {
-		TestableReceiver TestableReceiver
-		Integration      *notify.Integration
-	}
-
-	// result contains the receiver that was tested and an error that is non-nil if the test failed
-	type result struct {
-		TestableReceiver *open_api_models.TestableReceiver
-		Integration      *notify.Integration
-		Error            error
-	}
-
-	type TestableReceiverIntegration struct {
-		Integration notify.Integration
-		Error       error
-	}
-
-	type TestableReceiverConfigResult struct {
-		Name   string
-		Status string
-		Error  error
-	}
-
-	type TestableReceiverResult struct {
-		Name          string
-		ConfigResults []TestableReceiverConfigResult
-	}
-
-	type TestableReceiversResult struct {
-		Alert             types.Alert
-		TestableReceivers []TestableReceiverResult
-		NotifedAt         time.Time
-	}
-
-	// buildReceiverIntegrations builds a list of integration notifiers off of a
-	// receiver config.
-	buildReceiverIntegrations := func(nc *config.Receiver, tmpl *template.Template, logger log.Logger) []TestableReceiverIntegration {
-		var (
-			integrations []TestableReceiverIntegration
-			add          = func(name string, i int, rs notify.ResolvedSender, f func(l log.Logger) (notify.Notifier, error)) {
-				n, err := f(log.With(logger, "integration", name))
-				if err != nil {
-					integrations = append(integrations, TestableReceiverIntegration{
-						Integration: notify.NewIntegration(nil, rs, name, i),
-						Error:       err,
-					})
-				} else {
-					integrations = append(integrations, TestableReceiverIntegration{
-						Integration: notify.NewIntegration(n, rs, name, i),
-					})
-				}
-			}
+		return testable_receiver_ops.NewPostTestReceiversOK().WithPayload(
+			&testable_receiver_ops.PostTestReceiversOKBody{
+				results.Receivers[0].Name,
+				"200",
+			},
 		)
 
-		for i, c := range nc.WebhookConfigs {
-			add("webhook", i, c, func(l log.Logger) (notify.Notifier, error) { return webhook.New(c, tmpl, l) })
-		}
-		for i, c := range nc.EmailConfigs {
-			add("email", i, c, func(l log.Logger) (notify.Notifier, error) { return email.New(c, tmpl, l), nil })
-		}
-		for i, c := range nc.PagerdutyConfigs {
-			add("pagerduty", i, c, func(l log.Logger) (notify.Notifier, error) { return pagerduty.New(c, tmpl, l) })
-		}
-		for i, c := range nc.OpsGenieConfigs {
-			add("opsgenie", i, c, func(l log.Logger) (notify.Notifier, error) { return opsgenie.New(c, tmpl, l) })
-		}
-		for i, c := range nc.WechatConfigs {
-			add("wechat", i, c, func(l log.Logger) (notify.Notifier, error) { return wechat.New(c, tmpl, l) })
-		}
-		for i, c := range nc.SlackConfigs {
-			add("slack", i, c, func(l log.Logger) (notify.Notifier, error) { return slack.New(c, tmpl, l) })
-		}
-		for i, c := range nc.VictorOpsConfigs {
-			add("victorops", i, c, func(l log.Logger) (notify.Notifier, error) { return victorops.New(c, tmpl, l) })
-		}
-		for i, c := range nc.PushoverConfigs {
-			add("pushover", i, c, func(l log.Logger) (notify.Notifier, error) { return pushover.New(c, tmpl, l) })
-		}
-		for i, c := range nc.SNSConfigs {
-			add("sns", i, c, func(l log.Logger) (notify.Notifier, error) { return sns.New(c, tmpl, l) })
-		}
-		for i, c := range nc.TelegramConfigs {
-			add("telegram", i, c, func(l log.Logger) (notify.Notifier, error) { return telegram.New(c, tmpl, l) })
-		}
-		for i, c := range nc.DiscordConfigs {
-			add("discord", i, c, func(l log.Logger) (notify.Notifier, error) { return discord.New(c, tmpl, l) })
-		}
+	}
+	return testable_receiver_ops.NewPostTestReceiversInternalServerError()
+}
 
-		return integrations
+func (api *API) postTestReceiversConfigHandler(params testable_receiver_ops.PostTestReceiversConfigParams) middleware.Responder {
+
+	body := params.HTTPRequest.Body
+	logger := api.requestLogger(params.HTTPRequest)
+
+	resp, err := io.ReadAll(body)
+
+	// buf := new(bytes.Buffer)
+	// buf.ReadFrom(body)
+	// respBytes := buf.String()
+	// respString := string(respBytes)
+
+	if err != nil {
+		return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
 	}
 
-	// invalid keeps track of all invalid receiver configurations
-	// var invalid []result
-	// jobs keeps track of all receivers that need to be sent test notifications
-	var jobs []job
+	level.Debug(logger).Log("msg", len(resp))
 
-	// g, ctx := errgroup.WithContext(ctx)
-	// integration := buildReceiverIntegrations(&api.receivers, &template.Template{}, logger)
+	cfg, err := config.Load(string(resp))
+	if err != nil {
+		return testable_receiver_ops.NewPostTestReceiversBadRequest().WithPayload(err.Error())
+	}
 
-	jobs = append(jobs, job{
-		TestableReceiver: testableReceiver,
-		Integration:      &notify.Integration{},
-	})
+	ctx := params.HTTPRequest.Context()
 
-	var notifier config.DiscordConfig
+	if cfg != nil {
+		tmpl, err := template.FromGlobs(cfg.Templates)
+		if err != nil {
+			return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
+		}
+		u, err := url.Parse("https://example.com")
+		if err != nil {
+			return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
+		}
+		tmpl.ExternalURL = u
+		if err != nil {
+			return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
+		}
 
-	buildReceiverIntegrations(&api.receivers, &template.Template{}, logger)
+		c := testable_receiver.TestReceiversParams{
+			Receivers: cfg.Receivers,
+		}
 
-	notifier.Message = "test message"
-	// notify.WithGroupKey("https://discord.com/api/webhooks/1136961561269911612/4WV-ePxMkUIDNVknggGGLG_InI5xBvPvAyN76ZpdMXutaWnevEIWj2n8C7MB071az1fG"
-	notifier.Title = "Dummy message"
+		results, err := testable_receiver.TestReceivers(ctx, c, tmpl)
+		if err != nil {
+			return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
+		}
 
-	// for job := range jobs {
-	// 	if _, err := job.Integration.Notify(notify.WithReceiverName(ctx, job.TestableReceiver.Name), alert); err != nil {
+		return testable_receiver_ops.NewPostTestReceiversOK().WithPayload(
+			&testable_receiver_ops.PostTestReceiversOKBody{
+				results.Receivers[0].Name,
+				"200",
+			},
+		)
 
-	// 	}
-	// }
+	}
+	return testable_receiver_ops.NewPostTestReceiversInternalServerError()
 
-	// v := result{
-	// 	TestableReceiver: testableReceiver,
-	// 	Integration:      &integration.Integration,
-	// 	Error:            nil,
-	// }
-
-	// for i := 0; i < 10; i++ {
-	// 	g.Go(func() error {
-	// 		for job := range jobCh {
-	// 			v := result{
-	// 				Receiver:    job.Receiver,
-	// 				Integration: job.Integration,
-	// 			}
-	// 			if _, err := job.Integration.Notify(notify.WithReceiverName(ctx, job.Receiver.Name), &testAlert); err != nil {
-	// 				v.Error = err
-	// 			}
-	// 			resultCh <- v
-	// 		}
-	// 		return nil
-	// 	})
-	// }
-	// g.Wait() // nolint
-
-	// for _, testableReceiver := range testableReceivers {
-	// 	integrations := buildReceiverIntegrations(testableReceiver, &template.Template{}, logger)
-	// 	for _, integration := range integrations {
-	// 		if integration.Error != nil {
-	// 			invalid = append(invalid, result{
-	// 				TestableReceiver:    testableReceiver,
-	// 				Integration: &integration.Integration,
-	// 				Error:       integration.Error,
-	// 			})
-	// 		} else {
-	// 			jobs = append(jobs, job{
-	// 				TestableReceiver:    testableReceiver,
-	// 				Integration: &integration.Integration,
-	// 			})
-	// 		}
-	// 	}
-	// }
-
-	// integration := buildReceiverIntegrations(testableReceiver, &template.Template{}, logger)
-
-	// jobs = append(jobs, job{
-	// 	TestableReceiver: testableReceiver,
-	// 	Integration:      &integration.Integration,
-	// })
-
-	// buildReceiverIntegrations(&api.receivers, &template.Template{}, logger)
-
-	return testable_receiver_ops.NewPostTestReceiversBadRequest()
 }
 
 func (api *API) getAlertsHandler(params alert_ops.GetAlertsParams) middleware.Responder {

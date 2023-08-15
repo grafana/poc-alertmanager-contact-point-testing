@@ -34,6 +34,11 @@ PostTestReceiversOK Successfully tested all receivers
 swagger:response postTestReceiversOK
 */
 type PostTestReceiversOK struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *PostTestReceiversOKBody `json:"body,omitempty"`
 }
 
 // NewPostTestReceiversOK creates PostTestReceiversOK with default headers values
@@ -42,12 +47,27 @@ func NewPostTestReceiversOK() *PostTestReceiversOK {
 	return &PostTestReceiversOK{}
 }
 
+// WithPayload adds the payload to the post test receivers o k response
+func (o *PostTestReceiversOK) WithPayload(payload *PostTestReceiversOKBody) *PostTestReceiversOK {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the post test receivers o k response
+func (o *PostTestReceiversOK) SetPayload(payload *PostTestReceiversOKBody) {
+	o.Payload = payload
+}
+
 // WriteResponse to the client
 func (o *PostTestReceiversOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.Header().Del(runtime.HeaderContentType) //Remove Content-Type on empty responses
-
 	rw.WriteHeader(200)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
 }
 
 // PostTestReceiversBadRequestCode is the HTTP code returned for type PostTestReceiversBadRequest

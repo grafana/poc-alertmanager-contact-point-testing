@@ -47,7 +47,7 @@ paths:
       tags:
         - testableReceiver
       operationId: postTestReceivers
-      description: Test all receivers (name of notification integrations)
+      description: Test all receivers (name of notification integrations) from existing configuration file
       parameters:
         - in: body
           name: testableReceivers
@@ -58,12 +58,44 @@ paths:
       responses:
         '200':
           description: Successfully tested all receivers
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              receiver:
+                type: string
         '500':
           $ref: '#/responses/InternalServerError'
         '400':
           $ref: '#/responses/BadRequest'
         '408':
           $ref: '#/responses/RequestTimeOut'
+  /receivers/test/config:
+    post:
+      tags:
+        - testableReceiver
+      operationId: postTestReceiversConfig
+      description: Test all receivers (name of notification integrations) from inserted configuration file
+      consumes:
+        - text/plain
+      parameters:
+        - in: body
+          name: testableReceiversConfig
+          description: The configuration file to parse
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully tested all receivers from provided configuration file
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              receiver:
+                type: string
   /silences:
     get:
       tags:
@@ -539,32 +571,13 @@ definitions:
   testableReceiver:
     type: object
     properties:
-      uid:
+      config: 
         type: string
       name:
         type: string
-      type:
-        type: string
-      hook:
-        type: string
-      group_wait:
-        type: string
-      group_interval:
-        type: string
-      repeat_interval:
-        type: string
-      discord_configs:
-        type: array
-        items: 
-          type: string
     required:
-      - uid
       - name
-      - type
-      - hook
-      - group_wait
-      - group_interval
-      - repeat_interval
+      - config
   labelSet:
     type: object
     additionalProperties:

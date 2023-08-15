@@ -20,9 +20,12 @@ package testable_receiver
 // Editing this file might prove futile when you re-run the generate command
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // PostTestReceiversHandlerFunc turns a function with the right signature into a post test receivers handler
@@ -46,7 +49,7 @@ func NewPostTestReceivers(ctx *middleware.Context, handler PostTestReceiversHand
 /*
 	PostTestReceivers swagger:route POST /receivers/test testableReceiver postTestReceivers
 
-Test all receivers (name of notification integrations)
+Test all receivers (name of notification integrations) from existing configuration file
 */
 type PostTestReceivers struct {
 	Context *middleware.Context
@@ -67,4 +70,44 @@ func (o *PostTestReceivers) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	res := o.Handler.Handle(Params) // actually handle the request
 	o.Context.Respond(rw, r, route.Produces, route, res)
 
+}
+
+// PostTestReceiversOKBody post test receivers o k body
+//
+// swagger:model PostTestReceiversOKBody
+type PostTestReceiversOKBody struct {
+
+	// receiver
+	Receiver string `json:"receiver,omitempty"`
+
+	// status
+	Status string `json:"status,omitempty"`
+}
+
+// Validate validates this post test receivers o k body
+func (o *PostTestReceiversOKBody) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this post test receivers o k body based on context it is used
+func (o *PostTestReceiversOKBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (o *PostTestReceiversOKBody) MarshalBinary() ([]byte, error) {
+	if o == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(o)
+}
+
+// UnmarshalBinary interface implementation
+func (o *PostTestReceiversOKBody) UnmarshalBinary(b []byte) error {
+	var res PostTestReceiversOKBody
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*o = res
+	return nil
 }

@@ -232,7 +232,7 @@ func init() {
     },
     "/receivers/test": {
       "post": {
-        "description": "Test all receivers (name of notification integrations)",
+        "description": "Test all receivers (name of notification integrations) from existing configuration file",
         "tags": [
           "testableReceiver"
         ],
@@ -250,7 +250,18 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Successfully tested all receivers"
+            "description": "Successfully tested all receivers",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "receiver": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/responses/BadRequest"
@@ -260,6 +271,45 @@ func init() {
           },
           "500": {
             "$ref": "#/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/receivers/test/config": {
+      "post": {
+        "description": "Test all receivers (name of notification integrations) from inserted configuration file",
+        "consumes": [
+          "text/plain"
+        ],
+        "tags": [
+          "testableReceiver"
+        ],
+        "operationId": "postTestReceiversConfig",
+        "parameters": [
+          {
+            "description": "The configuration file to parse",
+            "name": "testableReceiversConfig",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully tested all receivers from provided configuration file",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "receiver": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -790,40 +840,14 @@ func init() {
     "testableReceiver": {
       "type": "object",
       "required": [
-        "uid",
         "name",
-        "type",
-        "hook",
-        "group_wait",
-        "group_interval",
-        "repeat_interval"
+        "config"
       ],
       "properties": {
-        "discord_configs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "group_interval": {
-          "type": "string"
-        },
-        "group_wait": {
-          "type": "string"
-        },
-        "hook": {
+        "config": {
           "type": "string"
         },
         "name": {
-          "type": "string"
-        },
-        "repeat_interval": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string"
-        },
-        "uid": {
           "type": "string"
         }
       }
@@ -1118,7 +1142,7 @@ func init() {
     },
     "/receivers/test": {
       "post": {
-        "description": "Test all receivers (name of notification integrations)",
+        "description": "Test all receivers (name of notification integrations) from existing configuration file",
         "tags": [
           "testableReceiver"
         ],
@@ -1136,7 +1160,18 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Successfully tested all receivers"
+            "description": "Successfully tested all receivers",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "receiver": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad request",
@@ -1154,6 +1189,45 @@ func init() {
             "description": "Internal server error",
             "schema": {
               "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/receivers/test/config": {
+      "post": {
+        "description": "Test all receivers (name of notification integrations) from inserted configuration file",
+        "consumes": [
+          "text/plain"
+        ],
+        "tags": [
+          "testableReceiver"
+        ],
+        "operationId": "postTestReceiversConfig",
+        "parameters": [
+          {
+            "description": "The configuration file to parse",
+            "name": "testableReceiversConfig",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully tested all receivers from provided configuration file",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "receiver": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              }
             }
           }
         }
@@ -1697,40 +1771,14 @@ func init() {
     "testableReceiver": {
       "type": "object",
       "required": [
-        "uid",
         "name",
-        "type",
-        "hook",
-        "group_wait",
-        "group_interval",
-        "repeat_interval"
+        "config"
       ],
       "properties": {
-        "discord_configs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "group_interval": {
-          "type": "string"
-        },
-        "group_wait": {
-          "type": "string"
-        },
-        "hook": {
+        "config": {
           "type": "string"
         },
         "name": {
-          "type": "string"
-        },
-        "repeat_interval": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string"
-        },
-        "uid": {
           "type": "string"
         }
       }

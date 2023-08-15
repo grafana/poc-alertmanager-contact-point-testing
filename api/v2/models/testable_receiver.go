@@ -33,67 +33,24 @@ import (
 // swagger:model testableReceiver
 type TestableReceiver struct {
 
-	// discord configs
-	DiscordConfigs []string `json:"discord_configs"`
-
-	// group interval
+	// config
 	// Required: true
-	GroupInterval *string `json:"group_interval"`
-
-	// group wait
-	// Required: true
-	GroupWait *string `json:"group_wait"`
-
-	// hook
-	// Required: true
-	Hook *string `json:"hook"`
+	Config *string `json:"config"`
 
 	// name
 	// Required: true
 	Name *string `json:"name"`
-
-	// repeat interval
-	// Required: true
-	RepeatInterval *string `json:"repeat_interval"`
-
-	// type
-	// Required: true
-	Type *string `json:"type"`
-
-	// uid
-	// Required: true
-	UID *string `json:"uid"`
 }
 
 // Validate validates this testable receiver
 func (m *TestableReceiver) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateGroupInterval(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateGroupWait(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateHook(formats); err != nil {
+	if err := m.validateConfig(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if err := m.validateName(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateRepeatInterval(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateType(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateUID(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -103,27 +60,9 @@ func (m *TestableReceiver) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *TestableReceiver) validateGroupInterval(formats strfmt.Registry) error {
+func (m *TestableReceiver) validateConfig(formats strfmt.Registry) error {
 
-	if err := validate.Required("group_interval", "body", m.GroupInterval); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *TestableReceiver) validateGroupWait(formats strfmt.Registry) error {
-
-	if err := validate.Required("group_wait", "body", m.GroupWait); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *TestableReceiver) validateHook(formats strfmt.Registry) error {
-
-	if err := validate.Required("hook", "body", m.Hook); err != nil {
+	if err := validate.Required("config", "body", m.Config); err != nil {
 		return err
 	}
 
@@ -133,33 +72,6 @@ func (m *TestableReceiver) validateHook(formats strfmt.Registry) error {
 func (m *TestableReceiver) validateName(formats strfmt.Registry) error {
 
 	if err := validate.Required("name", "body", m.Name); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *TestableReceiver) validateRepeatInterval(formats strfmt.Registry) error {
-
-	if err := validate.Required("repeat_interval", "body", m.RepeatInterval); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *TestableReceiver) validateType(formats strfmt.Registry) error {
-
-	if err := validate.Required("type", "body", m.Type); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *TestableReceiver) validateUID(formats strfmt.Registry) error {
-
-	if err := validate.Required("uid", "body", m.UID); err != nil {
 		return err
 	}
 
