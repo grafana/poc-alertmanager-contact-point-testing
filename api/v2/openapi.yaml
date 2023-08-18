@@ -90,12 +90,29 @@ paths:
         '200':
           description: Successfully tested all receivers from provided configuration file
           schema:
-            type: object
-            properties:
-              status:
-                type: string
-              receiver:
-                type: string
+            type: array
+            items:
+              type: object
+              properties:
+                name: 
+                  type: string
+                config-results:
+                  type: array
+                  items:
+                    type: object 
+                    properties:
+                      name:
+                        type: string
+                      error:
+                        type: string
+                      status:
+                        type: string
+        '500':
+          $ref: '#/responses/InternalServerError'
+        '400':
+          $ref: '#/responses/BadRequest'
+        '408':
+          $ref: '#/responses/RequestTimeOut'
   /silences:
     get:
       tags:
@@ -578,6 +595,19 @@ definitions:
     required:
       - name
       - config
+  postableTestReceiver:
+    type: object
+    properties:
+      name:
+        type: string
+      error:
+        type: string
+      status:
+        type: string
+    required:
+      - name
+      - error 
+      - status 
   labelSet:
     type: object
     additionalProperties:

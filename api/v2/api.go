@@ -15,7 +15,6 @@ package v2
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -281,27 +280,11 @@ func (api *API) postTestReceiversHandler(params testable_receiver_ops.PostTestRe
 
 func (api *API) postTestReceiversConfigHandler(params testable_receiver_ops.PostTestReceiversConfigParams) middleware.Responder {
 
-	body := params.HTTPRequest.Body
-	logger := api.requestLogger(params.HTTPRequest)
-
-	resp, err := io.ReadAll(body)
-
-	// buf := new(bytes.Buffer)
-	// buf.ReadFrom(body)
-	// respBytes := buf.String()
-	// respString := string(respBytes)
-
-	if err != nil {
-		return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
-	}
-
-	level.Debug(logger).Log("msg", len(resp))
-
-	cfg, err := config.Load(string(resp))
+	body := params.TestableReceiversConfig
+	cfg, err := config.Load(body)
 	if err != nil {
 		return testable_receiver_ops.NewPostTestReceiversBadRequest().WithPayload(err.Error())
 	}
-
 	ctx := params.HTTPRequest.Context()
 
 	if cfg != nil {
@@ -327,11 +310,20 @@ func (api *API) postTestReceiversConfigHandler(params testable_receiver_ops.Post
 			return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
 		}
 
-		return testable_receiver_ops.NewPostTestReceiversOK().WithPayload(
-			&testable_receiver_ops.PostTestReceiversOKBody{
-				results.Receivers[0].Name,
-				"200",
-			},
+		var ret []*testable_receiver_ops.PostTestReceiversConfigOKBodyItems0
+		for _, receiver := range results.Receivers {
+			receiverConfigResults := testable_receiver_ops.PostTestReceiversConfigOKBodyItems0ConfigResultsItems0{
+				Name: receiver.ConfigResults[0],
+			}
+			receiverResult := testable_receiver_ops.PostTestReceiversConfigOKBodyItems0{
+				Name:          receiver.Name,
+				ConfigResults: receiver.ConfigResults,
+			}
+			ret = append(ret)
+		}
+
+		return testable_receiver_ops.NewPostTestReceiversConfigOK().WithPayload(
+			[]*testable_receiver_ops.PostTestReceiversConfigOKBodyItems0{},
 		)
 
 	}

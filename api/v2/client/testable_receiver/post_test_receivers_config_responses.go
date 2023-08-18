@@ -23,7 +23,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strconv"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -43,6 +45,24 @@ func (o *PostTestReceiversConfigReader) ReadResponse(response runtime.ClientResp
 			return nil, err
 		}
 		return result, nil
+	case 400:
+		result := NewPostTestReceiversConfigBadRequest()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 408:
+		result := NewPostTestReceiversConfigRequestTimeout()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 500:
+		result := NewPostTestReceiversConfigInternalServerError()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	default:
 		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
 	}
@@ -59,7 +79,7 @@ PostTestReceiversConfigOK describes a response with status code 200, with defaul
 Successfully tested all receivers from provided configuration file
 */
 type PostTestReceiversConfigOK struct {
-	Payload *PostTestReceiversConfigOKBody
+	Payload []*PostTestReceiversConfigOKBodyItems0
 }
 
 // IsSuccess returns true when this post test receivers config o k response has a 2xx status code
@@ -95,16 +115,197 @@ func (o *PostTestReceiversConfigOK) String() string {
 	return fmt.Sprintf("[POST /receivers/test/config][%d] postTestReceiversConfigOK  %+v", 200, o.Payload)
 }
 
-func (o *PostTestReceiversConfigOK) GetPayload() *PostTestReceiversConfigOKBody {
+func (o *PostTestReceiversConfigOK) GetPayload() []*PostTestReceiversConfigOKBodyItems0 {
 	return o.Payload
 }
 
 func (o *PostTestReceiversConfigOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(PostTestReceiversConfigOKBody)
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostTestReceiversConfigBadRequest creates a PostTestReceiversConfigBadRequest with default headers values
+func NewPostTestReceiversConfigBadRequest() *PostTestReceiversConfigBadRequest {
+	return &PostTestReceiversConfigBadRequest{}
+}
+
+/*
+PostTestReceiversConfigBadRequest describes a response with status code 400, with default header values.
+
+Bad request
+*/
+type PostTestReceiversConfigBadRequest struct {
+	Payload string
+}
+
+// IsSuccess returns true when this post test receivers config bad request response has a 2xx status code
+func (o *PostTestReceiversConfigBadRequest) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this post test receivers config bad request response has a 3xx status code
+func (o *PostTestReceiversConfigBadRequest) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this post test receivers config bad request response has a 4xx status code
+func (o *PostTestReceiversConfigBadRequest) IsClientError() bool {
+	return true
+}
+
+// IsServerError returns true when this post test receivers config bad request response has a 5xx status code
+func (o *PostTestReceiversConfigBadRequest) IsServerError() bool {
+	return false
+}
+
+// IsCode returns true when this post test receivers config bad request response a status code equal to that given
+func (o *PostTestReceiversConfigBadRequest) IsCode(code int) bool {
+	return code == 400
+}
+
+func (o *PostTestReceiversConfigBadRequest) Error() string {
+	return fmt.Sprintf("[POST /receivers/test/config][%d] postTestReceiversConfigBadRequest  %+v", 400, o.Payload)
+}
+
+func (o *PostTestReceiversConfigBadRequest) String() string {
+	return fmt.Sprintf("[POST /receivers/test/config][%d] postTestReceiversConfigBadRequest  %+v", 400, o.Payload)
+}
+
+func (o *PostTestReceiversConfigBadRequest) GetPayload() string {
+	return o.Payload
+}
+
+func (o *PostTestReceiversConfigBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostTestReceiversConfigRequestTimeout creates a PostTestReceiversConfigRequestTimeout with default headers values
+func NewPostTestReceiversConfigRequestTimeout() *PostTestReceiversConfigRequestTimeout {
+	return &PostTestReceiversConfigRequestTimeout{}
+}
+
+/*
+PostTestReceiversConfigRequestTimeout describes a response with status code 408, with default header values.
+
+Request time out
+*/
+type PostTestReceiversConfigRequestTimeout struct {
+	Payload string
+}
+
+// IsSuccess returns true when this post test receivers config request timeout response has a 2xx status code
+func (o *PostTestReceiversConfigRequestTimeout) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this post test receivers config request timeout response has a 3xx status code
+func (o *PostTestReceiversConfigRequestTimeout) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this post test receivers config request timeout response has a 4xx status code
+func (o *PostTestReceiversConfigRequestTimeout) IsClientError() bool {
+	return true
+}
+
+// IsServerError returns true when this post test receivers config request timeout response has a 5xx status code
+func (o *PostTestReceiversConfigRequestTimeout) IsServerError() bool {
+	return false
+}
+
+// IsCode returns true when this post test receivers config request timeout response a status code equal to that given
+func (o *PostTestReceiversConfigRequestTimeout) IsCode(code int) bool {
+	return code == 408
+}
+
+func (o *PostTestReceiversConfigRequestTimeout) Error() string {
+	return fmt.Sprintf("[POST /receivers/test/config][%d] postTestReceiversConfigRequestTimeout  %+v", 408, o.Payload)
+}
+
+func (o *PostTestReceiversConfigRequestTimeout) String() string {
+	return fmt.Sprintf("[POST /receivers/test/config][%d] postTestReceiversConfigRequestTimeout  %+v", 408, o.Payload)
+}
+
+func (o *PostTestReceiversConfigRequestTimeout) GetPayload() string {
+	return o.Payload
+}
+
+func (o *PostTestReceiversConfigRequestTimeout) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostTestReceiversConfigInternalServerError creates a PostTestReceiversConfigInternalServerError with default headers values
+func NewPostTestReceiversConfigInternalServerError() *PostTestReceiversConfigInternalServerError {
+	return &PostTestReceiversConfigInternalServerError{}
+}
+
+/*
+PostTestReceiversConfigInternalServerError describes a response with status code 500, with default header values.
+
+Internal server error
+*/
+type PostTestReceiversConfigInternalServerError struct {
+	Payload string
+}
+
+// IsSuccess returns true when this post test receivers config internal server error response has a 2xx status code
+func (o *PostTestReceiversConfigInternalServerError) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this post test receivers config internal server error response has a 3xx status code
+func (o *PostTestReceiversConfigInternalServerError) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this post test receivers config internal server error response has a 4xx status code
+func (o *PostTestReceiversConfigInternalServerError) IsClientError() bool {
+	return false
+}
+
+// IsServerError returns true when this post test receivers config internal server error response has a 5xx status code
+func (o *PostTestReceiversConfigInternalServerError) IsServerError() bool {
+	return true
+}
+
+// IsCode returns true when this post test receivers config internal server error response a status code equal to that given
+func (o *PostTestReceiversConfigInternalServerError) IsCode(code int) bool {
+	return code == 500
+}
+
+func (o *PostTestReceiversConfigInternalServerError) Error() string {
+	return fmt.Sprintf("[POST /receivers/test/config][%d] postTestReceiversConfigInternalServerError  %+v", 500, o.Payload)
+}
+
+func (o *PostTestReceiversConfigInternalServerError) String() string {
+	return fmt.Sprintf("[POST /receivers/test/config][%d] postTestReceiversConfigInternalServerError  %+v", 500, o.Payload)
+}
+
+func (o *PostTestReceiversConfigInternalServerError) GetPayload() string {
+	return o.Payload
+}
+
+func (o *PostTestReceiversConfigInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
@@ -112,30 +313,94 @@ func (o *PostTestReceiversConfigOK) readResponse(response runtime.ClientResponse
 }
 
 /*
-PostTestReceiversConfigOKBody post test receivers config o k body
-swagger:model PostTestReceiversConfigOKBody
+PostTestReceiversConfigOKBodyItems0 post test receivers config o k body items0
+swagger:model PostTestReceiversConfigOKBodyItems0
 */
-type PostTestReceiversConfigOKBody struct {
+type PostTestReceiversConfigOKBodyItems0 struct {
 
-	// receiver
-	Receiver string `json:"receiver,omitempty"`
+	// config results
+	ConfigResults []*PostTestReceiversConfigOKBodyItems0ConfigResultsItems0 `json:"config-results"`
 
-	// status
-	Status string `json:"status,omitempty"`
+	// name
+	Name string `json:"name,omitempty"`
 }
 
-// Validate validates this post test receivers config o k body
-func (o *PostTestReceiversConfigOKBody) Validate(formats strfmt.Registry) error {
+// Validate validates this post test receivers config o k body items0
+func (o *PostTestReceiversConfigOKBodyItems0) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.validateConfigResults(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this post test receivers config o k body based on context it is used
-func (o *PostTestReceiversConfigOKBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (o *PostTestReceiversConfigOKBodyItems0) validateConfigResults(formats strfmt.Registry) error {
+	if swag.IsZero(o.ConfigResults) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(o.ConfigResults); i++ {
+		if swag.IsZero(o.ConfigResults[i]) { // not required
+			continue
+		}
+
+		if o.ConfigResults[i] != nil {
+			if err := o.ConfigResults[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("config-results" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("config-results" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this post test receivers config o k body items0 based on the context it is used
+func (o *PostTestReceiversConfigOKBodyItems0) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.contextValidateConfigResults(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (o *PostTestReceiversConfigOKBodyItems0) contextValidateConfigResults(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(o.ConfigResults); i++ {
+
+		if o.ConfigResults[i] != nil {
+			if err := o.ConfigResults[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("config-results" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("config-results" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (o *PostTestReceiversConfigOKBody) MarshalBinary() ([]byte, error) {
+func (o *PostTestReceiversConfigOKBodyItems0) MarshalBinary() ([]byte, error) {
 	if o == nil {
 		return nil, nil
 	}
@@ -143,8 +408,52 @@ func (o *PostTestReceiversConfigOKBody) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (o *PostTestReceiversConfigOKBody) UnmarshalBinary(b []byte) error {
-	var res PostTestReceiversConfigOKBody
+func (o *PostTestReceiversConfigOKBodyItems0) UnmarshalBinary(b []byte) error {
+	var res PostTestReceiversConfigOKBodyItems0
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*o = res
+	return nil
+}
+
+/*
+PostTestReceiversConfigOKBodyItems0ConfigResultsItems0 post test receivers config o k body items0 config results items0
+swagger:model PostTestReceiversConfigOKBodyItems0ConfigResultsItems0
+*/
+type PostTestReceiversConfigOKBodyItems0ConfigResultsItems0 struct {
+
+	// error
+	Error string `json:"error,omitempty"`
+
+	// name
+	Name string `json:"name,omitempty"`
+
+	// status
+	Status string `json:"status,omitempty"`
+}
+
+// Validate validates this post test receivers config o k body items0 config results items0
+func (o *PostTestReceiversConfigOKBodyItems0ConfigResultsItems0) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this post test receivers config o k body items0 config results items0 based on context it is used
+func (o *PostTestReceiversConfigOKBodyItems0ConfigResultsItems0) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (o *PostTestReceiversConfigOKBodyItems0ConfigResultsItems0) MarshalBinary() ([]byte, error) {
+	if o == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(o)
+}
+
+// UnmarshalBinary interface implementation
+func (o *PostTestReceiversConfigOKBodyItems0ConfigResultsItems0) UnmarshalBinary(b []byte) error {
+	var res PostTestReceiversConfigOKBodyItems0ConfigResultsItems0
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

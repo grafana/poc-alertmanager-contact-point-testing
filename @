@@ -1,0 +1,33 @@
+integrated a few changes regarding the contact point testing configuration:
+- added new endpoint receivers/test/config/ where users can test their configuration files by adding them to the body via text/plain
+- first successful iteration of receivers/test which reads from existing config file 
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch api-integration
+# Your branch is up to date with 'origin/api-integration'.
+#
+# Changes to be committed:
+#	modified:   api/v2/api.go
+#	new file:   api/v2/client/testable_receiver/post_test_receivers_config_parameters.go
+#	new file:   api/v2/client/testable_receiver/post_test_receivers_config_responses.go
+#	modified:   api/v2/client/testable_receiver/post_test_receivers_responses.go
+#	modified:   api/v2/client/testable_receiver/testable_receiver_client.go
+#	modified:   api/v2/models/testable_receiver.go
+#	modified:   api/v2/openapi.yaml
+#	modified:   api/v2/restapi/configure_alertmanager.go
+#	modified:   api/v2/restapi/doc.go
+#	modified:   api/v2/restapi/embedded_spec.go
+#	modified:   api/v2/restapi/operations/alertmanager_api.go
+#	modified:   api/v2/restapi/operations/testable_receiver/post_test_receivers.go
+#	new file:   api/v2/restapi/operations/testable_receiver/post_test_receivers_config.go
+#	new file:   api/v2/restapi/operations/testable_receiver/post_test_receivers_config_parameters.go
+#	new file:   api/v2/restapi/operations/testable_receiver/post_test_receivers_config_responses.go
+#	new file:   api/v2/restapi/operations/testable_receiver/post_test_receivers_config_urlbuilder.go
+#	modified:   api/v2/restapi/operations/testable_receiver/post_test_receivers_responses.go
+#	new file:   cli/testdata/conf.bad-alert.yml
+#	new file:   cli/testdata/conf.receiver.yml
+#	modified:   go.mod
+#	modified:   go.sum
+#	new file:   receiver/receiver.go
+#

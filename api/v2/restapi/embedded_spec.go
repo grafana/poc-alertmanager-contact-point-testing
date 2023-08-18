@@ -300,16 +300,42 @@ func init() {
           "200": {
             "description": "Successfully tested all receivers from provided configuration file",
             "schema": {
-              "type": "object",
-              "properties": {
-                "receiver": {
-                  "type": "string"
-                },
-                "status": {
-                  "type": "string"
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "config-results": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "name": {
+                    "type": "string"
+                  }
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/responses/BadRequest"
+          },
+          "408": {
+            "$ref": "#/responses/RequestTimeOut"
+          },
+          "500": {
+            "$ref": "#/responses/InternalServerError"
           }
         }
       }
@@ -781,6 +807,25 @@ func init() {
         }
       ]
     },
+    "postableTestReceiver": {
+      "type": "object",
+      "required": [
+        "name",
+        "error",
+        "status"
+      ],
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
     "receiver": {
       "type": "object",
       "required": [
@@ -1219,15 +1264,28 @@ func init() {
           "200": {
             "description": "Successfully tested all receivers from provided configuration file",
             "schema": {
-              "type": "object",
-              "properties": {
-                "receiver": {
-                  "type": "string"
-                },
-                "status": {
-                  "type": "string"
-                }
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PostTestReceiversConfigOKBodyItems0"
               }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "408": {
+            "description": "Request time out",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "type": "string"
             }
           }
         }
@@ -1397,6 +1455,34 @@ func init() {
     }
   },
   "definitions": {
+    "PostTestReceiversConfigOKBodyItems0": {
+      "type": "object",
+      "properties": {
+        "config-results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PostTestReceiversConfigOKBodyItems0ConfigResultsItems0"
+          }
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "PostTestReceiversConfigOKBodyItems0ConfigResultsItems0": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
     "alert": {
       "type": "object",
       "required": [
@@ -1711,6 +1797,25 @@ func init() {
           "$ref": "#/definitions/silence"
         }
       ]
+    },
+    "postableTestReceiver": {
+      "type": "object",
+      "required": [
+        "name",
+        "error",
+        "status"
+      ],
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
     },
     "receiver": {
       "type": "object",

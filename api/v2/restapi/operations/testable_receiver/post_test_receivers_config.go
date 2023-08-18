@@ -22,7 +22,9 @@ package testable_receiver
 import (
 	"context"
 	"net/http"
+	"strconv"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -72,30 +74,94 @@ func (o *PostTestReceiversConfig) ServeHTTP(rw http.ResponseWriter, r *http.Requ
 
 }
 
-// PostTestReceiversConfigOKBody post test receivers config o k body
+// PostTestReceiversConfigOKBodyItems0 post test receivers config o k body items0
 //
-// swagger:model PostTestReceiversConfigOKBody
-type PostTestReceiversConfigOKBody struct {
+// swagger:model PostTestReceiversConfigOKBodyItems0
+type PostTestReceiversConfigOKBodyItems0 struct {
 
-	// receiver
-	Receiver string `json:"receiver,omitempty"`
+	// config results
+	ConfigResults []*PostTestReceiversConfigOKBodyItems0ConfigResultsItems0 `json:"config-results"`
 
-	// status
-	Status string `json:"status,omitempty"`
+	// name
+	Name string `json:"name,omitempty"`
 }
 
-// Validate validates this post test receivers config o k body
-func (o *PostTestReceiversConfigOKBody) Validate(formats strfmt.Registry) error {
+// Validate validates this post test receivers config o k body items0
+func (o *PostTestReceiversConfigOKBodyItems0) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.validateConfigResults(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
 	return nil
 }
 
-// ContextValidate validates this post test receivers config o k body based on context it is used
-func (o *PostTestReceiversConfigOKBody) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (o *PostTestReceiversConfigOKBodyItems0) validateConfigResults(formats strfmt.Registry) error {
+	if swag.IsZero(o.ConfigResults) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(o.ConfigResults); i++ {
+		if swag.IsZero(o.ConfigResults[i]) { // not required
+			continue
+		}
+
+		if o.ConfigResults[i] != nil {
+			if err := o.ConfigResults[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("config-results" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("config-results" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this post test receivers config o k body items0 based on the context it is used
+func (o *PostTestReceiversConfigOKBodyItems0) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := o.contextValidateConfigResults(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (o *PostTestReceiversConfigOKBodyItems0) contextValidateConfigResults(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(o.ConfigResults); i++ {
+
+		if o.ConfigResults[i] != nil {
+			if err := o.ConfigResults[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("config-results" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("config-results" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (o *PostTestReceiversConfigOKBody) MarshalBinary() ([]byte, error) {
+func (o *PostTestReceiversConfigOKBodyItems0) MarshalBinary() ([]byte, error) {
 	if o == nil {
 		return nil, nil
 	}
@@ -103,8 +169,51 @@ func (o *PostTestReceiversConfigOKBody) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (o *PostTestReceiversConfigOKBody) UnmarshalBinary(b []byte) error {
-	var res PostTestReceiversConfigOKBody
+func (o *PostTestReceiversConfigOKBodyItems0) UnmarshalBinary(b []byte) error {
+	var res PostTestReceiversConfigOKBodyItems0
+	if err := swag.ReadJSON(b, &res); err != nil {
+		return err
+	}
+	*o = res
+	return nil
+}
+
+// PostTestReceiversConfigOKBodyItems0ConfigResultsItems0 post test receivers config o k body items0 config results items0
+//
+// swagger:model PostTestReceiversConfigOKBodyItems0ConfigResultsItems0
+type PostTestReceiversConfigOKBodyItems0ConfigResultsItems0 struct {
+
+	// error
+	Error string `json:"error,omitempty"`
+
+	// name
+	Name string `json:"name,omitempty"`
+
+	// status
+	Status string `json:"status,omitempty"`
+}
+
+// Validate validates this post test receivers config o k body items0 config results items0
+func (o *PostTestReceiversConfigOKBodyItems0ConfigResultsItems0) Validate(formats strfmt.Registry) error {
+	return nil
+}
+
+// ContextValidate validates this post test receivers config o k body items0 config results items0 based on context it is used
+func (o *PostTestReceiversConfigOKBodyItems0ConfigResultsItems0) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	return nil
+}
+
+// MarshalBinary interface implementation
+func (o *PostTestReceiversConfigOKBodyItems0ConfigResultsItems0) MarshalBinary() ([]byte, error) {
+	if o == nil {
+		return nil, nil
+	}
+	return swag.WriteJSON(o)
+}
+
+// UnmarshalBinary interface implementation
+func (o *PostTestReceiversConfigOKBodyItems0ConfigResultsItems0) UnmarshalBinary(b []byte) error {
+	var res PostTestReceiversConfigOKBodyItems0ConfigResultsItems0
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
