@@ -312,18 +312,22 @@ func (api *API) postTestReceiversConfigHandler(params testable_receiver_ops.Post
 
 		var ret []*testable_receiver_ops.PostTestReceiversConfigOKBodyItems0
 		for _, receiver := range results.Receivers {
-			receiverConfigResults := testable_receiver_ops.PostTestReceiversConfigOKBodyItems0ConfigResultsItems0{
-				Name: receiver.ConfigResults[0],
+			var configResults []*testable_receiver_ops.PostTestReceiversConfigOKBodyItems0ConfigResultsItems0
+			for _, configResult := range receiver.ConfigResults {
+				configResults = append(configResults, &testable_receiver_ops.PostTestReceiversConfigOKBodyItems0ConfigResultsItems0{
+					Name:   configResult.Name,
+					Error:  configResult.Error.Error(),
+					Status: configResult.Status,
+				})
 			}
-			receiverResult := testable_receiver_ops.PostTestReceiversConfigOKBodyItems0{
+			ret = append(ret, &testable_receiver_ops.PostTestReceiversConfigOKBodyItems0{
 				Name:          receiver.Name,
-				ConfigResults: receiver.ConfigResults,
-			}
-			ret = append(ret)
+				ConfigResults: configResults,
+			})
 		}
 
 		return testable_receiver_ops.NewPostTestReceiversConfigOK().WithPayload(
-			[]*testable_receiver_ops.PostTestReceiversConfigOKBodyItems0{},
+			ret,
 		)
 
 	}
