@@ -32,6 +32,7 @@ import (
 	general_ops "github.com/prometheus/alertmanager/api/v2/restapi/operations/general"
 	receiver_ops "github.com/prometheus/alertmanager/api/v2/restapi/operations/receiver"
 	silence_ops "github.com/prometheus/alertmanager/api/v2/restapi/operations/silence"
+	"github.com/prometheus/alertmanager/api/v2/restapi/operations/testable_receiver"
 	"github.com/prometheus/alertmanager/config"
 	"github.com/prometheus/alertmanager/pkg/labels"
 	"github.com/prometheus/alertmanager/silence"
@@ -501,6 +502,47 @@ receivers:
 		w := httptest.NewRecorder()
 		p := runtime.TextProducer()
 		responder := api.getReceiversHandler(receiver_ops.GetReceiversParams{
+			HTTPRequest: r,
+		})
+		responder.WriteResponse(w, p)
+		body, _ := io.ReadAll(w.Result().Body)
+
+		require.Equal(t, tc.expectedCode, w.Code)
+		require.Equal(t, tc.body, string(body))
+	}
+}
+
+func TestPostReceiversHandler(t *testing.T) {
+	in := `
+route:
+    receiver: team-X
+
+receivers:
+- name: 'team-X'
+- name: 'team-Y'
+`
+	cfg, _ := config.Load(in)
+	api := API{
+		uptime:             time.Now(),
+		logger:             log.NewNopLogger(),
+		alertmanagerConfig: cfg,
+	}
+
+	for _, tc := range []struct {
+		body         string
+		expectedCode int
+	}{
+		{
+			`[{"name":"team-X"},{"name":"team-Y"}]`,
+			200,
+		},
+	} {
+		r, err := http.NewRequest("GET", "/api/v2/receivers/test/config", nil)
+		require.NoError(t, err)
+
+		w := httptest.NewRecorder()
+		p := runtime.TextProducer()
+		responder := api.postTestReceiversConfigHandler(testable_receiver.PostTestReceiversConfigParams{
 			HTTPRequest: r,
 		})
 		responder.WriteResponse(w, p)

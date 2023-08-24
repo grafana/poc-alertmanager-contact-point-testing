@@ -78,14 +78,18 @@ paths:
       operationId: postTestReceiversConfig
       description: Test all receivers (name of notification integrations) from inserted configuration file
       consumes:
-        - text/plain
+        - multipart/form-data
       parameters:
-        - in: body
+        - in: formData
           name: testableReceiversConfig
+          type: file
           description: The configuration file to parse
           required: true
-          schema:
-            type: string
+        - in: formData
+          name: template
+          type: file
+          description: The templates to utilize
+          required: false
       responses:
         '200':
           description: Successfully tested all receivers from provided configuration file

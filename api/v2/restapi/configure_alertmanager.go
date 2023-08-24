@@ -54,9 +54,12 @@ func configureAPI(api *operations.AlertmanagerAPI) http.Handler {
 	// api.UseRedoc()
 
 	api.JSONConsumer = runtime.JSONConsumer()
-	api.TxtConsumer = runtime.TextConsumer()
+	api.MultipartformConsumer = runtime.DiscardConsumer
 
 	api.JSONProducer = runtime.JSONProducer()
+
+	// You may change here the memory limit for this multipart form parser. Below is the default (32 MB).
+	// testable_receiver.PostTestReceiversConfigMaxParseMemory = 32 << 20
 
 	if api.SilenceDeleteSilenceHandler == nil {
 		api.SilenceDeleteSilenceHandler = silence.DeleteSilenceHandlerFunc(func(params silence.DeleteSilenceParams) middleware.Responder {

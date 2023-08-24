@@ -75,11 +75,17 @@ PostTestReceiversConfigParams contains all the parameters to send to the API end
 */
 type PostTestReceiversConfigParams struct {
 
+	/* Template.
+
+	   The templates to utilize
+	*/
+	Template runtime.NamedReadCloser
+
 	/* TestableReceiversConfig.
 
 	   The configuration file to parse
 	*/
-	TestableReceiversConfig string
+	TestableReceiversConfig runtime.NamedReadCloser
 
 	timeout    time.Duration
 	Context    context.Context
@@ -134,14 +140,25 @@ func (o *PostTestReceiversConfigParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithTemplate adds the template to the post test receivers config params
+func (o *PostTestReceiversConfigParams) WithTemplate(template runtime.NamedReadCloser) *PostTestReceiversConfigParams {
+	o.SetTemplate(template)
+	return o
+}
+
+// SetTemplate adds the template to the post test receivers config params
+func (o *PostTestReceiversConfigParams) SetTemplate(template runtime.NamedReadCloser) {
+	o.Template = template
+}
+
 // WithTestableReceiversConfig adds the testableReceiversConfig to the post test receivers config params
-func (o *PostTestReceiversConfigParams) WithTestableReceiversConfig(testableReceiversConfig string) *PostTestReceiversConfigParams {
+func (o *PostTestReceiversConfigParams) WithTestableReceiversConfig(testableReceiversConfig runtime.NamedReadCloser) *PostTestReceiversConfigParams {
 	o.SetTestableReceiversConfig(testableReceiversConfig)
 	return o
 }
 
 // SetTestableReceiversConfig adds the testableReceiversConfig to the post test receivers config params
-func (o *PostTestReceiversConfigParams) SetTestableReceiversConfig(testableReceiversConfig string) {
+func (o *PostTestReceiversConfigParams) SetTestableReceiversConfig(testableReceiversConfig runtime.NamedReadCloser) {
 	o.TestableReceiversConfig = testableReceiversConfig
 }
 
@@ -152,7 +169,18 @@ func (o *PostTestReceiversConfigParams) WriteToRequest(r runtime.ClientRequest, 
 		return err
 	}
 	var res []error
-	if err := r.SetBodyParam(o.TestableReceiversConfig); err != nil {
+
+	if o.Template != nil {
+
+		if o.Template != nil {
+			// form file param template
+			if err := r.SetFileParam("template", o.Template); err != nil {
+				return err
+			}
+		}
+	}
+	// form file param testableReceiversConfig
+	if err := r.SetFileParam("testableReceiversConfig", o.TestableReceiversConfig); err != nil {
 		return err
 	}
 

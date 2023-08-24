@@ -25,7 +25,7 @@
 //
 //	Consumes:
 //	  - application/json
-//	  - text/plain
+//	  - multipart/form-data
 //
 //	Produces:
 //	  - application/json

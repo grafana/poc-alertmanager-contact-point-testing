@@ -279,7 +279,7 @@ func init() {
       "post": {
         "description": "Test all receivers (name of notification integrations) from inserted configuration file",
         "consumes": [
-          "text/plain"
+          "multipart/form-data"
         ],
         "tags": [
           "testableReceiver"
@@ -287,13 +287,17 @@ func init() {
         "operationId": "postTestReceiversConfig",
         "parameters": [
           {
+            "type": "file",
             "description": "The configuration file to parse",
             "name": "testableReceiversConfig",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "file",
+            "description": "The templates to utilize",
+            "name": "template",
+            "in": "formData"
           }
         ],
         "responses": {
@@ -1243,7 +1247,7 @@ func init() {
       "post": {
         "description": "Test all receivers (name of notification integrations) from inserted configuration file",
         "consumes": [
-          "text/plain"
+          "multipart/form-data"
         ],
         "tags": [
           "testableReceiver"
@@ -1251,13 +1255,17 @@ func init() {
         "operationId": "postTestReceiversConfig",
         "parameters": [
           {
+            "type": "file",
             "description": "The configuration file to parse",
             "name": "testableReceiversConfig",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "in": "formData",
+            "required": true
+          },
+          {
+            "type": "file",
+            "description": "The templates to utilize",
+            "name": "template",
+            "in": "formData"
           }
         ],
         "responses": {

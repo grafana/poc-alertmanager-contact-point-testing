@@ -21,12 +21,20 @@ package testable_receiver
 
 import (
 	"io"
+	"mime/multipart"
 	"net/http"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 )
+
+// PostTestReceiversConfigMaxParseMemory sets the maximum size in bytes for
+// the multipart form parser for this operation.
+//
+// The default value is 32 MB.
+// The multipart parser stores up to this + 10MB.
+var PostTestReceiversConfigMaxParseMemory int64 = 32 << 20
 
 // NewPostTestReceiversConfigParams creates a new PostTestReceiversConfigParams object
 //
@@ -45,11 +53,15 @@ type PostTestReceiversConfigParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
+	/*The templates to utilize
+	  In: formData
+	*/
+	Template io.ReadCloser
 	/*The configuration file to parse
 	  Required: true
-	  In: body
+	  In: formData
 	*/
-	TestableReceiversConfig string
+	TestableReceiversConfig io.ReadCloser
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -61,24 +73,50 @@ func (o *PostTestReceiversConfigParams) BindRequest(r *http.Request, route *midd
 
 	o.HTTPRequest = r
 
-	if runtime.HasBody(r) {
-		defer r.Body.Close()
-		var body string
-		if err := route.Consumer.Consume(r.Body, &body); err != nil {
-			if err == io.EOF {
-				res = append(res, errors.Required("testableReceiversConfig", "body", ""))
-			} else {
-				res = append(res, errors.NewParseError("testableReceiversConfig", "body", "", err))
-			}
-		} else {
-			// no validation required on inline body
-			o.TestableReceiversConfig = body
+	if err := r.ParseMultipartForm(PostTestReceiversConfigMaxParseMemory); err != nil {
+		if err != http.ErrNotMultipart {
+			return errors.New(400, "%v", err)
+		} else if err := r.ParseForm(); err != nil {
+			return errors.New(400, "%v", err)
 		}
+	}
+
+	template, templateHeader, err := r.FormFile("template")
+	if err != nil && err != http.ErrMissingFile {
+		res = append(res, errors.New(400, "reading file %q failed: %v", "template", err))
+	} else if err == http.ErrMissingFile {
+		// no-op for missing but optional file parameter
+	} else if err := o.bindTemplate(template, templateHeader); err != nil {
+		res = append(res, err)
 	} else {
-		res = append(res, errors.Required("testableReceiversConfig", "body", ""))
+		o.Template = &runtime.File{Data: template, Header: templateHeader}
+	}
+
+	testableReceiversConfig, testableReceiversConfigHeader, err := r.FormFile("testableReceiversConfig")
+	if err != nil {
+		res = append(res, errors.New(400, "reading file %q failed: %v", "testableReceiversConfig", err))
+	} else if err := o.bindTestableReceiversConfig(testableReceiversConfig, testableReceiversConfigHeader); err != nil {
+		// Required: true
+		res = append(res, err)
+	} else {
+		o.TestableReceiversConfig = &runtime.File{Data: testableReceiversConfig, Header: testableReceiversConfigHeader}
 	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindTemplate binds file parameter Template.
+//
+// The only supported validations on files are MinLength and MaxLength
+func (o *PostTestReceiversConfigParams) bindTemplate(file multipart.File, header *multipart.FileHeader) error {
+	return nil
+}
+
+// bindTestableReceiversConfig binds file parameter TestableReceiversConfig.
+//
+// The only supported validations on files are MinLength and MaxLength
+func (o *PostTestReceiversConfigParams) bindTestableReceiversConfig(file multipart.File, header *multipart.FileHeader) error {
 	return nil
 }
