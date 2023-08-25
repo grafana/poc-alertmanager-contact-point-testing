@@ -15,6 +15,7 @@ package v2
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -280,98 +281,80 @@ func (api *API) postTestReceiversHandler(params testable_receiver_ops.PostTestRe
 
 func (api *API) postTestReceiversConfigHandler(params testable_receiver_ops.PostTestReceiversConfigParams) middleware.Responder {
 
-	var cfgByte []byte
-	// var templateByte []byte
+	var (
+		ctx = params.HTTPRequest.Context()
+	)
 
-	_, err := params.TestableReceiversConfig.Read(cfgByte)
+	cfgByte, err := io.ReadAll(params.TestableReceiversConfig)
 	if err != nil {
 		return testable_receiver_ops.NewPostTestReceiversBadRequest().WithPayload(err.Error())
 	}
-	fmt.Printf(string(cfgByte))
 	cfg, err := config.Load(string(cfgByte))
-	logger := api.requestLogger(params.HTTPRequest)
+	if err != nil {
+		return testable_receiver_ops.NewPostTestReceiversBadRequest().WithPayload(err.Error())
+	}
 
-	level.Debug(logger).Log("bytes", string(cfgByte), "err", err)
+	if cfg != nil {
+		var tmpl *template.Template
+		if params.Template != nil {
+			tmpl, err = template.New()
+			if err != nil {
+				return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
+			}
+			err = tmpl.Parse(params.Template)
+			if err != nil {
+				return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
+			}
+		} else {
+			tmpl, err = template.FromGlobs(cfg.Templates)
+			if err != nil {
+				return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
+			}
+		}
 
-	fmt.Printf(cfg.String())
+		u, err := url.Parse("https://example.com")
+		if err != nil {
+			return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
+		}
+		tmpl.ExternalURL = u
 
-	// template, err := params.TestableReceiversConfig.Read(templateByte)
-	// if err != nil {
-	// 	return testable_receiver_ops.NewPostTestReceiversBadRequest().WithPayload(err.Error())
-	// }
-	// if err != nil {
-	// 	return testable_receiver_ops.NewPostTestReceiversBadRequest().WithPayload(err.Error())
-	// }
-	// ctx := params.HTTPRequest.Context()
-	// bodyTemplates := string(templateByte)
+		c := testable_receiver.TestReceiversParams{
+			Receivers: cfg.Receivers,
+		}
 
-	// if cfg != nil {
-	// 	var tmpl *template.Template
-	// 	if len(bodyTemplates) != 0 {
-	// 		var templates []string
-	// 		for _, customTmpl := range bodyTemplates {
-	// 			tmpl = &template.Template{}
-	// 			// newTmpl, err := template.FromGlobs(strings.Join(customTmpl.Template))
-	// 			err := tmpl.Parse(strings.NewReader(customTmpl.Template))
-	// 			if err != nil {
-	// 				return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
-	// 			}
-	// 			templates = append(templates, "smth")
-	// 		}
-	// 		tmpl, err = template.FromGlobs(templates)
-	// 	} else {
-	// 		tmpl, err = template.FromGlobs(cfg.Templates)
-	// 	}
+		results, err := testable_receiver.TestReceivers(ctx, c, tmpl)
+		if err != nil {
+			return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
+		}
 
-	// 	if err != nil {
-	// 		return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
-	// 	}
-	// 	u, err := url.Parse("https://example.com")
-	// 	if err != nil {
-	// 		return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
-	// 	}
-	// 	tmpl.ExternalURL = u
-	// 	if err != nil {
-	// 		return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
-	// 	}
+		var ret []*testable_receiver_ops.PostTestReceiversConfigOKBodyItems0
+		for _, receiver := range results.Receivers {
+			var configResults []*testable_receiver_ops.PostTestReceiversConfigOKBodyItems0ConfigResultsItems0
+			for _, configResult := range receiver.ConfigResults {
+				if configResult.Error != nil {
+					configResults = append(configResults, &testable_receiver_ops.PostTestReceiversConfigOKBodyItems0ConfigResultsItems0{
+						Name:   configResult.Name,
+						Error:  configResult.Error.Error(),
+						Status: configResult.Status,
+					})
+				} else {
+					configResults = append(configResults, &testable_receiver_ops.PostTestReceiversConfigOKBodyItems0ConfigResultsItems0{
+						Name:   configResult.Name,
+						Status: configResult.Status,
+					})
+				}
+			}
+			ret = append(ret, &testable_receiver_ops.PostTestReceiversConfigOKBodyItems0{
+				Name:          receiver.Name,
+				ConfigResults: configResults,
+			})
+		}
 
-	// 	c := testable_receiver.TestReceiversParams{
-	// 		Receivers: cfg.Receivers,
-	// 	}
+		return testable_receiver_ops.NewPostTestReceiversConfigOK().WithPayload(
+			ret,
+		)
 
-	// 	results, err := testable_receiver.TestReceivers(ctx, c, tmpl)
-	// 	if err != nil {
-	// 		return testable_receiver_ops.NewPostTestReceiversInternalServerError().WithPayload(err.Error())
-	// 	}
-
-	// 	var ret []*testable_receiver_ops.PostTestReceiversConfigOKBodyItems0
-	// 	for _, receiver := range results.Receivers {
-	// 		var configResults []*testable_receiver_ops.PostTestReceiversConfigOKBodyItems0ConfigResultsItems0
-	// 		for _, configResult := range receiver.ConfigResults {
-	// 			if configResult.Error != nil {
-	// 				configResults = append(configResults, &testable_receiver_ops.PostTestReceiversConfigOKBodyItems0ConfigResultsItems0{
-	// 					Name:   configResult.Name,
-	// 					Error:  configResult.Error.Error(),
-	// 					Status: configResult.Status,
-	// 				})
-	// 			} else {
-	// 				configResults = append(configResults, &testable_receiver_ops.PostTestReceiversConfigOKBodyItems0ConfigResultsItems0{
-	// 					Name:   configResult.Name,
-	// 					Status: configResult.Status,
-	// 				})
-	// 			}
-	// 		}
-	// 		ret = append(ret, &testable_receiver_ops.PostTestReceiversConfigOKBodyItems0{
-	// 			Name:          receiver.Name,
-	// 			ConfigResults: configResults,
-	// 		})
-	// 	}
-
-	// 	return testable_receiver_ops.NewPostTestReceiversConfigOK().WithPayload(
-	// 		ret,
-	// 	)
-
-	// }
+	}
 	return testable_receiver_ops.NewPostTestReceiversConfigOK()
 
 }
